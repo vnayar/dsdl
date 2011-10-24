@@ -1,3 +1,5 @@
+module game;
+
 import derelict.sdl.sdl;
 import derelict.opengl.gl;
 import derelict.opengl.glu;

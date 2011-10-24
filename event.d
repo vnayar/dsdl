@@ -1,3 +1,5 @@
+module event;
+
 import derelict.sdl.sdl;
 import derelict.util.compat;
 
