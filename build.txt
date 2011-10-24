@@ -1,0 +1,2 @@
+dmd -I/home/vnayar/d/include/d/ -L-L/home/vnayar/d/lib -L-ldl -L-lGL -L-lDerelictSDL -L-lDerelictUtil -L-lDerelictGL game.d surface.d event.d
+rebuild -I/home/vnayar/d/include/d -S/home/vnayar/d/lib/ -llGL -llDerelictSDL -llDerelictUtil -llDerelictGL game.d
