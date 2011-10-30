@@ -1,6 +1,7 @@
 module game;
 
 import derelict.sdl.sdl;
+import derelict.sdl.image;
 import derelict.opengl.gl;
 import derelict.opengl.glu;
 import derelict.util.compat;
@@ -12,7 +13,9 @@ import event;
 class Game {
 	private bool _running;
 	private SDL_Surface* _surfDisplay;
-	private SDL_Surface* _surfTest;
+	private SDL_Surface* _surfGrid;
+	private SDL_Surface* _surfX;
+	private SDL_Surface* _surfO;
 
 	// Our inner-class defines how we handle events.
 	private class GameEventDispatcher : EventDispatcher {
@@ -63,6 +66,7 @@ class Game {
 	public bool onInit() {
 		writeln("onInit()");
 		DerelictSDL.load();
+		DerelictSDLImage.load();
 		DerelictGL.load();
 		DerelictGLU.load();
 
@@ -75,21 +79,17 @@ class Game {
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-		//if ((_surfDisplay = SDL_SetVideoMode(1024, 768, 0, SDL_OPENGL | SDL_DOUBLEBUF)) == null)
 		if ((_surfDisplay =
-					SDL_SetVideoMode(640, 480, 32, SDL_HWSURFACE | SDL_DOUBLEBUF)) == null)
+					SDL_SetVideoMode(600, 600, 32, SDL_HWSURFACE | SDL_DOUBLEBUF)) == null)
 		{
 			throw new Exception("Failed to set video mode: " ~ toDString(SDL_GetError()));
 		}
 
-		if ((_surfTest = Surface.onLoad("golgi.bmp")) == null) {
-			throw new Exception("Could not load golgi.bmp");
-		}
+		//_surfGrid = Surface.onLoad("./gfx/golgi.bmp");
+		_surfGrid = Surface.onLoad("./gfx/grid.png");
+		_surfX = Surface.onLoad("./gfx/x.png");
+		_surfO = Surface.onLoad("./gfx/o.png");
 
-		writeln("_surfTest has value: ", _surfTest);
-
-		//DerelictGL.loadExtendedVersions(GLVersion.GL20);
-		//DerelictGL.loadExtensions();
 		return true;
 	}
 
@@ -97,16 +97,17 @@ class Game {
 
 	public void onRender() {
 		writeln("onRender");
-		Surface.onDraw(_surfTest, _surfDisplay, 0, 0);
-		Surface.onDraw(_surfTest, 0, 0, 80, 50, _surfDisplay, 160, 100);
+		Surface.onDraw(_surfGrid, _surfDisplay, 0, 0);
 		SDL_Flip(_surfDisplay);
-		//SDL_GL_SwapBuffers();
-		SDL_Delay(1000);
+		SDL_Delay(500);
 	}
 
 	public void onCleanup() {
-		SDL_FreeSurface(_surfTest);
 		SDL_FreeSurface(_surfDisplay);
+		SDL_FreeSurface(_surfGrid);
+		SDL_FreeSurface(_surfX);
+		SDL_FreeSurface(_surfO);
+
 		if(SDL_Quit !is null)
 			SDL_Quit();
 	}

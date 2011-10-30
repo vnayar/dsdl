@@ -1,14 +1,18 @@
 module surface;
 
 import derelict.sdl.sdl;
+import derelict.sdl.image;
+import derelict.util.compat;
 import std.stdio;
 
 class Surface {
 	public this() {}
-	public static SDL_Surface* onLoad(in const (char*) file) {
+	public static SDL_Surface* onLoad(in string file) {
 		SDL_Surface* surfTemp, surfReturn;
-		if ((surfTemp = SDL_LoadBMP(file)) == null) {
-			return null;
+		//if ((surfTemp = SDL_LoadBMP(file.ptr)) == null) {
+		if ((surfTemp = IMG_Load(file.ptr)) == null) {
+			throw new Exception("Could not open file " ~ file ~ ": "
+					~ toDString(SDL_GetError()));
 		}
 		surfReturn = SDL_DisplayFormat(surfTemp);
 		SDL_FreeSurface(surfTemp);
