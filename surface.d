@@ -29,7 +29,6 @@ class Surface {
 		destR.x = x;
 		destR.y = y;
 		auto ret = SDL_BlitSurface(surfSrc, null, surfDest, &destR);
-		writeln("Blit return value: ", ret);
 
 		return true;
 	}
@@ -53,8 +52,16 @@ class Surface {
 		destR.y = yDest;
 
 		auto ret = SDL_BlitSurface(surfSrc, &srcR, surfDest, &destR);
-		writeln("Blit return value: ", ret);
 
+		return true;
+	}
+
+	public static bool setTransparent(SDL_Surface* surfDest, ubyte R, ubyte G, ubyte B) {
+		if (surfDest == null) {
+			return false;
+		}
+		SDL_SetColorKey(surfDest, SDL_SRCCOLORKEY | SDL_RLEACCEL,
+				SDL_MapRGB((*surfDest).format, R, G, B));
 		return true;
 	}
 }

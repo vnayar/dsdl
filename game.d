@@ -8,14 +8,14 @@ import derelict.util.compat;
 import std.stdio;
 
 import surface;
+import animation;
 import event;
 
 class Game {
 	private bool _running;
 	private SDL_Surface* _surfDisplay;
-	private SDL_Surface* _surfGrid;
-	private SDL_Surface* _surfX;
-	private SDL_Surface* _surfO;
+  private SDL_Surface* _surfYoshi;
+  private Animation _animYoshi;
 
 	// Our inner-class defines how we handle events.
 	private class GameEventDispatcher : EventDispatcher {
@@ -26,7 +26,7 @@ class Game {
 
 			override void onKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode) {
 				if(sym == SDLK_ESCAPE)
-					this.outer._running = false;
+					_running = false;
 			}
 	}
 
@@ -35,11 +35,10 @@ class Game {
 	alias _eventDispatcher this;
 
 
-
 	public this() {
-		writeln("this()");
 		_running = true;
 		_eventDispatcher = this.new GameEventDispatcher();
+    _animYoshi = new Animation();
 	}
 
 	public int onExecute() {
@@ -85,32 +84,38 @@ class Game {
 			throw new Exception("Failed to set video mode: " ~ toDString(SDL_GetError()));
 		}
 
-		//_surfGrid = Surface.onLoad("./gfx/golgi.bmp");
-		_surfGrid = Surface.onLoad("./gfx/grid.png");
-		_surfX = Surface.onLoad("./gfx/x.png");
-		_surfO = Surface.onLoad("./gfx/o.png");
+    writeln("Loading image.");
+		_surfYoshi = Surface.onLoad("./gfx/yoshi.bmp");
+    writeln("Image loaded.");
+		Surface.setTransparent(_surfYoshi, 255, 0, 255);
+
+    _animYoshi.setMaxFrames(8);
+    //_animYoshi.setOscillate(true);
 
 		return true;
 	}
 
-	public void onLoop() {}
+	public void onLoop() {
+    _animYoshi.onAnimate();
+  }
 
 	public void onRender() {
 		writeln("onRender");
-		Surface.onDraw(_surfGrid, _surfDisplay, 0, 0);
+    Surface.onDraw(_surfYoshi, cast(short) 0, cast(short)(_animYoshi.getCurrentFrame() * 64),
+      cast(short)64, cast(short)64,
+      _surfDisplay, cast(short)200, cast(short)150);
 		SDL_Flip(_surfDisplay);
-		SDL_Delay(500);
+		SDL_Delay(50);
 	}
 
 	public void onCleanup() {
 		SDL_FreeSurface(_surfDisplay);
-		SDL_FreeSurface(_surfGrid);
-		SDL_FreeSurface(_surfX);
-		SDL_FreeSurface(_surfO);
+		SDL_FreeSurface(_surfYoshi);
 
 		if(SDL_Quit !is null)
 			SDL_Quit();
 	}
+
 }
 
 void main() {
