@@ -24,9 +24,9 @@ class Animation {
     }
 
     void onAnimate() {
-      writeln("Frame: " ~ to!string(_currentFrame));
-      writeln("FrameInc: " ~ to!string(_frameInc));
-      writeln("MaxFrames: " ~ to!string(_maxFrames));
+      //writeln("Frame: " ~ to!string(_currentFrame));
+      //writeln("FrameInc: " ~ to!string(_frameInc));
+      //writeln("MaxFrames: " ~ to!string(_maxFrames));
       // Wait until the time has come to advance to the next frame.
       if (_oldTime + _frameRate > SDL_GetTicks()) {
         return;
@@ -37,10 +37,10 @@ class Animation {
 
       if (_oscillate && 
           (_currentFrame >= _maxFrames - 1 || _currentFrame <= 0)) {
-        writeln("Oscillating.");
+        //writeln("Oscillating.");
         _frameInc = -_frameInc;
       } else if (_currentFrame >= _maxFrames - 1) {
-        writeln("Wrap around.");
+        //writeln("Wrap around.");
         _currentFrame = 0;
       }
     }

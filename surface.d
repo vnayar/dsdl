@@ -21,35 +21,35 @@ class Surface {
 	}
 
 	public static bool onDraw(SDL_Surface* surfSrc,
-			SDL_Surface* surfDest, short x, short y) {
+			SDL_Surface* surfDest, int x, int y) {
 		if (surfDest == null || surfSrc == null) {
 			return false;
 		}
 		SDL_Rect destR;
-		destR.x = x;
-		destR.y = y;
+		destR.x = cast(short) x;
+		destR.y = cast(short) y;
 		auto ret = SDL_BlitSurface(surfSrc, null, surfDest, &destR);
 
 		return true;
 	}
 
 	public static bool onDraw(SDL_Surface* surfSrc,
-			short xSrc, short ySrc, short width, short height,
+			int xSrc, int ySrc, int width, int height,
 			SDL_Surface* surfDest,
-			short xDest, short yDest) {
+			int xDest, int yDest) {
 		if (surfDest == null || surfSrc == null) {
 			return false;
 		}
 
 		SDL_Rect srcR;
-		srcR.x = xSrc;
-		srcR.y = ySrc;
-		srcR.w = width;
-		srcR.h = height;
+		srcR.x = cast(short) xSrc;
+		srcR.y = cast(short) ySrc;
+		srcR.w = cast(short) width;
+		srcR.h = cast(short) height;
 
 		SDL_Rect destR;
-		destR.x = xDest;
-		destR.y = yDest;
+		destR.x = cast(short) xDest;
+		destR.y = cast(short) yDest;
 
 		auto ret = SDL_BlitSurface(surfSrc, &srcR, surfDest, &destR);
 

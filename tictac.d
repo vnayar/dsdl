@@ -126,9 +126,9 @@ class TicTac {
 	public void onRender() {
 		writeln("onRender");
 		Surface.onDraw(_surfGrid, _surfDisplay, 0, 0);
-		for (short i = 0; i < _grid.length; i++) {
-			short x = cast(short)((i % 3) * 200);
-			short y = cast(short)((i / 3) * 200);
+		for (int i = 0; i < _grid.length; i++) {
+			int x = (i % 3) * 200;
+			int y = (i / 3) * 200;
 			if (_grid[i] == GridState.X) {
 				Surface.onDraw(_surfX, _surfDisplay, x, y);
 			} else if (_grid[i] == GridState.O) {
