@@ -8,7 +8,7 @@ import derelict.util.compat;
 import std.stdio;
 
 import constants, surface, animation, event, entity;
-import map;
+import area, map, camera;
 
 class Game {
 	private bool _running;
@@ -29,9 +29,15 @@ class Game {
 			}
 
 			override void onKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode) {
-				if(sym == SDLK_ESCAPE)
-					_running = false;
-			}
+        switch (sym) {
+				  case SDLK_ESCAPE: _running = false; break;
+          case SDLK_UP:     Camera.CameraControl.onMove( 0,  5); break;
+          case SDLK_DOWN:   Camera.CameraControl.onMove( 0, -5); break;
+          case SDLK_LEFT:   Camera.CameraControl.onMove( 5,  0); break;
+          case SDLK_RIGHT:  Camera.CameraControl.onMove(-5,  0); break;
+          default:          break;
+        }
+      }
 	}
 
 	// Allow multiple subtyping by creating an alias for this.
@@ -110,11 +116,16 @@ class Game {
     Entity.EntityList ~= _entity1;
     Entity.EntityList ~= _entity2;
 
-    if (_map.onLoad("./maps/1.map") == false) {
+    //if (_map.onLoad("./maps/1.map") == false) {
+    //  return false;
+    //}
+    //_surfTileset = Surface.onLoad("./tileset/1.png");
+    //_map.setTileset(_surfTileset);
+    if (Area.AreaControl.onLoad("./maps/1.area") == false) {
       return false;
     }
-    _surfTileset = Surface.onLoad("./tileset/1.png");
-    _map.setTileset(_surfTileset);
+
+    SDL_EnableKeyRepeat(1, SDL_DEFAULT_REPEAT_INTERVAL / 3);
 
 		return true;
 	}
@@ -132,7 +143,9 @@ class Game {
     //Surface.onDraw(_surfYoshi, 0, _animYoshi.getCurrentFrame() * 64,
     //  64, 64,
     //  _surfDisplay, 200, 150);
-    _map.onRender(_surfDisplay, 0, 0);
+    //_map.onRender(_surfDisplay, 0, 0);
+    Area.AreaControl.onRender(_surfDisplay, Camera.CameraControl.getX(),
+        Camera.CameraControl.getY());
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
       entity.onRender(_surfDisplay);
@@ -149,6 +162,8 @@ class Game {
       entity.onCleanup();
     }
     Entity.EntityList = new Entity[0];
+
+    Area.AreaControl.onCleanup();
 
 		if(SDL_Quit !is null)
 			SDL_Quit();

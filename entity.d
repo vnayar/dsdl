@@ -43,6 +43,14 @@ class Entity {
       _y = y;
     }
 
+    float getX() {
+      return _x;
+    }
+
+    float getY() {
+      return _y;
+    }
+
     bool onLoad(string file, int width, int height, int maxFrames) {
       if ((_surfEntity = Surface.onLoad(file)) == null) {
         return false;
