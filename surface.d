@@ -14,7 +14,7 @@ class Surface {
 			throw new Exception("Could not open file " ~ file ~ ": "
 					~ toDString(SDL_GetError()));
 		}
-		surfReturn = SDL_DisplayFormat(surfTemp);
+		surfReturn = SDL_DisplayFormatAlpha(surfTemp);
 		SDL_FreeSurface(surfTemp);
 
 		return surfReturn;

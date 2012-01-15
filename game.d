@@ -119,7 +119,7 @@ class Game {
     Camera.CameraControl.setTarget(_entity1);
 
     // A nemesis?  I don't like the look in his eye.
-    if (_entity2.onLoad("./gfx/yoshi.bmp", 64, 64, 8) == false) {
+    if (_entity2.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
       return false;
     }
 
