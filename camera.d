@@ -1,6 +1,7 @@
 module camera;
 
-import constants, entity;
+import constants; 
+import physics.types;
 
 class Camera {
   enum TargetMode {NORMAL, CENTER};
@@ -10,7 +11,7 @@ class Camera {
   private int _x;
   private int _y;
 
-  private Entity _target;
+  private Locatable _target;
 
   TargetMode _targetMode;
 
@@ -25,20 +26,22 @@ class Camera {
 
   int getX() {
     if (_target !is null) {
+      DVect targetPos = _target.getLocation();
       if (_targetMode == TargetMode.CENTER) {
-        return cast(int) _target.getX() - (WWIDTH / 2);
+        return cast(int) targetPos[0] - (WWIDTH / 2);
       }
-      return cast(int)_target.getX();
+      return cast(int) targetPos[0];
     }
     return _x;
   }
 
   int getY() {
     if (_target !is null) {
+      DVect targetPos = _target.getLocation();
       if (_targetMode == TargetMode.CENTER) {
-        return cast(int) _target.getY() - (WHEIGHT / 2);
+        return cast(int) targetPos[1] - (WHEIGHT / 2);
       }
-      return cast(int)_target.getY();
+      return cast(int) targetPos[1];
     }
     return _y;
   }
@@ -48,7 +51,8 @@ class Camera {
     _y = y;
   }
 
-  void setTarget(Entity target) {
+  void setTarget(Locatable target, TargetMode mode=TargetMode.CENTER) {
     _target = target;
+    _targetMode = mode;
   }
 }

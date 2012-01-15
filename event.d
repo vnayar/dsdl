@@ -1,7 +1,6 @@
 module event;
 
 import derelict.sdl.sdl;
-import derelict.util.compat;
 
 class EventDispatcher {
 	public:

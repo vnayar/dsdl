@@ -9,17 +9,19 @@ import std.stdio;
 
 import constants, surface, animation, event, entity;
 import area, map, camera;
+import physics.types, physics.collision, physics.gravity;
 
 class Game {
 	private bool _running;
 	private SDL_Surface* _surfDisplay;
   private SDL_Surface* _surfTileset;
-  //private SDL_Surface* _surfYoshi;
-  //private Animation _animYoshi;
 
   private Entity _entity1;
   private Entity _entity2;
   private Map _map;
+
+  private SimpleGravityField _gravityField;
+  private CollisionField _collisionField;
 
 	// Our inner-class defines how we handle events.
 	private class GameEventDispatcher : EventDispatcher {
@@ -31,11 +33,17 @@ class Game {
 			override void onKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode) {
         switch (sym) {
 				  case SDLK_ESCAPE: _running = false; break;
-          case SDLK_UP:     Camera.CameraControl.onMove( 0,  5); break;
-          case SDLK_DOWN:   Camera.CameraControl.onMove( 0, -5); break;
-          case SDLK_LEFT:   Camera.CameraControl.onMove( 5,  0); break;
-          case SDLK_RIGHT:  Camera.CameraControl.onMove(-5,  0); break;
+          case SDLK_LEFT:   _entity1.setMoveLeft(true); break;
+          case SDLK_RIGHT:  _entity1.setMoveRight(true); break;
           default:          break;
+        }
+      }
+
+      override void onKeyUp(SDLKey sym, SDLMod mod, Uint16 unicode) {
+        switch (sym) {
+          case SDLK_LEFT:  _entity1.setMoveLeft(false); break;
+          case SDLK_RIGHT: _entity1.setMoveRight(false); break;
+          default: break;
         }
       }
 	}
@@ -51,7 +59,10 @@ class Game {
     _entity1 = new Entity();
     _entity2 = new Entity();
     _map = new Map();
-    //_animYoshi = new Animation();
+    _gravityField = new SimpleGravityField([0.0f, 0.75f]);
+    _gravityField.add(_entity1);
+    _collisionField = new CollisionField();
+    _collisionField.add(_entity1);
 	}
 
 	public int onExecute() {
@@ -97,41 +108,37 @@ class Game {
 			throw new Exception("Failed to set video mode: " ~ toDString(SDL_GetError()));
 		}
 
-    //writeln("Loading image.");
-		//_surfYoshi = Surface.onLoad("./gfx/yoshi.bmp");
-    //writeln("Image loaded.");
-		//Surface.setTransparent(_surfYoshi, 255, 0, 255);
-    //_animYoshi.setMaxFrames(8);
-    //_animYoshi.setOscillate(true);
-
-    if (_entity1.onLoad("./gfx/yoshi.bmp", 64, 64, 8) == false) {
+    // Load graphics for our Yoshi.
+    if (_entity1.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
       return false;
     }
+    _entity2.setLocation([100.0f, 75.0f]);
+    Entity.EntityList ~= _entity1;
 
+    // Set the camera to track our Yoshi.
+    Camera.CameraControl.setTarget(_entity1);
+
+    // A nemesis?  I don't like the look in his eye.
     if (_entity2.onLoad("./gfx/yoshi.bmp", 64, 64, 8) == false) {
       return false;
     }
 
-    _entity2.setX(100.0f);
-    Entity.EntityList ~= _entity1;
+    _entity2.setLocation([100.0f, 25.0f]);
     Entity.EntityList ~= _entity2;
 
-    //if (_map.onLoad("./maps/1.map") == false) {
-    //  return false;
-    //}
-    //_surfTileset = Surface.onLoad("./tileset/1.png");
-    //_map.setTileset(_surfTileset);
+    // Now load the landscape we we play on.
     if (Area.AreaControl.onLoad("./maps/1.area") == false) {
       return false;
     }
 
-    SDL_EnableKeyRepeat(1, SDL_DEFAULT_REPEAT_INTERVAL / 3);
+    //SDL_EnableKeyRepeat(1, SDL_DEFAULT_REPEAT_INTERVAL / 3);
 
 		return true;
 	}
 
 	public void onLoop() {
-    //_animYoshi.onAnimate();
+    _gravityField.onLoop();
+    _collisionField.onLoop();
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
       entity.onLoop();
@@ -140,11 +147,8 @@ class Game {
 
 	public void onRender() {
 		//writeln("onRender");
-    //Surface.onDraw(_surfYoshi, 0, _animYoshi.getCurrentFrame() * 64,
-    //  64, 64,
-    //  _surfDisplay, 200, 150);
-    //_map.onRender(_surfDisplay, 0, 0);
-    Area.AreaControl.onRender(_surfDisplay, Camera.CameraControl.getX(),
+    Area.AreaControl.onRender(_surfDisplay,
+        Camera.CameraControl.getX(),
         Camera.CameraControl.getY());
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
@@ -156,7 +160,6 @@ class Game {
 
 	public void onCleanup() {
 		SDL_FreeSurface(_surfDisplay);
-		//SDL_FreeSurface(_surfYoshi);
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
       entity.onCleanup();

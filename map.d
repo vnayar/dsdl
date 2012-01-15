@@ -1,8 +1,6 @@
 module map;
 
 import derelict.sdl.sdl;
-import derelict.sdl.image;
-import derelict.util.compat;
 import std.stdio;
 
 import constants, tile, surface;
@@ -63,5 +61,17 @@ class Map {
         id++;
       }
     }
+  }
+
+  /**
+   * Gets the tile from coordinates relative to the map.
+   */
+  Tile getTile(int x, int y) {
+    int id = x / TILE_SIZE + y / TILE_SIZE * MAP_WIDTH;
+
+    if (id < 0 || id > _tileList.length)
+      return null;
+
+    return _tileList[id];
   }
 }
