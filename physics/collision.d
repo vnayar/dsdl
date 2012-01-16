@@ -26,24 +26,26 @@ class CollisionField : Field {
    *   should be an object added to this one.
    */
   private bool isLocationValid(Collidable entity, DVect location) {
-    return true;
-    //return isLocationValidTile(entity, location);
+    return isLocationValidTile(entity, location);
   }
 
   private bool isLocationValidTile(Collidable entity, DVect location) {
     auto collision = entity.getCollisionBoundary();
 
     // In absolute coordinates, the boundary if entity moved to location.
-    int[DVect.length] startLoc = (cast(int[]) location)[] + 
-        (cast(int[]) collision.location)[];
-    int[DVect.length] endLoc = startLoc[] + (cast(int[]) collision.width)[];
+    int[DVect.length] startLoc;
+    int[DVect.length] endLoc;
+    foreach (i; 0 .. DVect.length) {
+      startLoc[i] = cast(int)(location[i] + collision.location[i]);
+      endLoc[i] = startLoc[i] + cast(int) collision.width[i] - 1;
+    }
 
     // Convert our boundaries into tile numbers.
     startLoc[] = startLoc[] / TILE_SIZE;
     endLoc[] = endLoc[] / TILE_SIZE;
 
     for (auto tileX = startLoc[0]; tileX <= endLoc[0]; tileX++) {
-      for (auto tileY = startLoc[1]; tileY < endLoc[1]; tileY++) {
+      for (auto tileY = startLoc[1]; tileY <= endLoc[1]; tileY++) {
         auto tile = Area.AreaControl.getTile(tileX * TILE_SIZE, tileY * TILE_SIZE);
         // No collision if there's nothing to collide with.
         if (tile is null)
@@ -81,6 +83,7 @@ class CollisionField : Field {
           scale -= 1;
         } else {
           // Stop moving in the direction in which we collide.
+          writeln("onMove collision");
           scale = 0;
         }
       }

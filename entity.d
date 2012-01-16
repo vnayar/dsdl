@@ -101,6 +101,14 @@ class Entity : Collidable {
 
   // Other
 
+  void setCollisionBoundary(Rectangle boundary) {
+    _collisionBoundary = boundary;
+  }
+
+  void jump() {
+    _velocity[1] -= 20.0f;
+  }
+
   void setMoveLeft(bool move) {
     _moveLeft = move;
   }

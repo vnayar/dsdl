@@ -33,6 +33,7 @@ class Game {
 			override void onKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode) {
         switch (sym) {
 				  case SDLK_ESCAPE: _running = false; break;
+          case SDLK_UP:     _entity1.jump(); break;
           case SDLK_LEFT:   _entity1.setMoveLeft(true); break;
           case SDLK_RIGHT:  _entity1.setMoveRight(true); break;
           default:          break;
@@ -112,7 +113,8 @@ class Game {
     if (_entity1.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
       return false;
     }
-    _entity2.setLocation([100.0f, 75.0f]);
+    _entity1.setLocation([100.0f, 75.0f]);
+    _entity1.setCollisionBoundary(Rectangle([8, 0], [48, 64]));
     Entity.EntityList ~= _entity1;
 
     // Set the camera to track our Yoshi.

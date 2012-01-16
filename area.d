@@ -26,7 +26,6 @@ class Area {
 
     string tilesetFileName;
     f.readf("%s\n", &tilesetFileName);
-    writeln("tilesetFileName '" ~ tilesetFileName ~ "'");
 
     _surfTileset = Surface.onLoad(tilesetFileName);
 
@@ -36,7 +35,6 @@ class Area {
       auto fileNames = split(f.readln());
       assert(fileNames.length == _areaSize);
       foreach (mapFileName; fileNames) {
-        writeln("mapFileName '" ~ mapFileName ~ "'");
 
         Map tempMap = new Map();
         if (tempMap.onLoad(mapFileName) == false)
