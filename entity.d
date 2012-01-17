@@ -9,7 +9,7 @@ import physics.types;
 /**
  * Anything that can be interacted with or move other than the map.
  */
-class Entity : Collidable {
+class Entity : /*implements*/ Collidable {
   enum Type {
     GENERIC,
     PLAYER

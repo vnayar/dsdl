@@ -7,8 +7,8 @@ import derelict.opengl.glu;
 import derelict.util.compat;
 import std.stdio;
 
-import constants, surface, animation, event, entity;
-import area, map, camera;
+import constants, surface, event, entity, player;
+import area, camera;
 import physics.types, physics.collision, physics.gravity;
 
 class Game {
@@ -16,9 +16,8 @@ class Game {
 	private SDL_Surface* _surfDisplay;
   private SDL_Surface* _surfTileset;
 
-  private Entity _entity1;
+  private Player _player1;
   private Entity _entity2;
-  private Map _map;
 
   private SimpleGravityField _gravityField;
   private CollisionField _collisionField;
@@ -33,17 +32,17 @@ class Game {
 			override void onKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode) {
         switch (sym) {
 				  case SDLK_ESCAPE: _running = false; break;
-          case SDLK_UP:     _entity1.jump(); break;
-          case SDLK_LEFT:   _entity1.setMoveLeft(true); break;
-          case SDLK_RIGHT:  _entity1.setMoveRight(true); break;
+          case SDLK_UP:     _player1.jump(); break;
+          case SDLK_LEFT:   _player1.setMoveLeft(true); break;
+          case SDLK_RIGHT:  _player1.setMoveRight(true); break;
           default:          break;
         }
       }
 
       override void onKeyUp(SDLKey sym, SDLMod mod, Uint16 unicode) {
         switch (sym) {
-          case SDLK_LEFT:  _entity1.setMoveLeft(false); break;
-          case SDLK_RIGHT: _entity1.setMoveRight(false); break;
+          case SDLK_LEFT:  _player1.setMoveLeft(false); break;
+          case SDLK_RIGHT: _player1.setMoveRight(false); break;
           default: break;
         }
       }
@@ -57,13 +56,12 @@ class Game {
 	public this() {
 		_running = true;
 		_eventDispatcher = this.new GameEventDispatcher();
-    _entity1 = new Entity();
+    _player1 = new Player();
     _entity2 = new Entity();
-    _map = new Map();
     _gravityField = new SimpleGravityField([0.0f, 0.75f]);
-    _gravityField.add(_entity1);
+    _gravityField.add(_player1);
     _collisionField = new CollisionField();
-    _collisionField.add(_entity1);
+    _collisionField.add(_player1);
 	}
 
 	public int onExecute() {
@@ -110,15 +108,15 @@ class Game {
 		}
 
     // Load graphics for our Yoshi.
-    if (_entity1.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
+    if (_player1.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
       return false;
     }
-    _entity1.setLocation([100.0f, 75.0f]);
-    _entity1.setCollisionBoundary(Rectangle([8, 0], [48, 64]));
-    Entity.EntityList ~= _entity1;
+    _player1.setLocation([100.0f, 75.0f]);
+    _player1.setCollisionBoundary(Rectangle([8, 0], [48, 64]));
+    Entity.EntityList ~= _player1;
 
     // Set the camera to track our Yoshi.
-    Camera.CameraControl.setTarget(_entity1);
+    Camera.CameraControl.setTarget(_player1);
 
     // A nemesis?  I don't like the look in his eye.
     if (_entity2.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
