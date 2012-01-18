@@ -42,7 +42,6 @@ class CollisionField : Field {
       endLoc[i] = endLoc[i] / TILE_SIZE;
     }
 
-
     for (auto tileX = startLoc[0]; tileX <= endLoc[0]; tileX++) {
       for (auto tileY = startLoc[1]; tileY <= endLoc[1]; tileY++) {
         auto tile = Area.AreaControl.getTile(tileX * TILE_SIZE, tileY * TILE_SIZE);
@@ -66,6 +65,7 @@ class CollisionField : Field {
 
   private void onMove(Collidable entity, in DVect move) {
     auto location = entity.getLocation();
+    auto velocity = entity.getVelocity();
     auto boundary = entity.getCollisionBoundary();
 
     // We will use the boundary in terms of absolute coordinates.
@@ -79,6 +79,8 @@ class CollisionField : Field {
       // Gives -1 for negative numbers, +1 for positive numbers.
       int unit = 1 - 2 * signbit(move[i]);
 
+      bool collision = true;
+
       while (scale > 0) {
         Rectangle incBoundary = boundary;
         if (unit >= 0) {
@@ -91,6 +93,7 @@ class CollisionField : Field {
         // This may trigger a collision event.
         if (isLocationValid(incBoundary)) {
           // Move all at once if there is no collision.
+          collision = false;
           location[i] += scale * unit;
           scale = 0;
         } else {
@@ -98,7 +101,12 @@ class CollisionField : Field {
           scale -= 1;
         }
       }
+
+      // Go directly into wall, do not pass Go.
+      if (collision)
+        velocity[i] = 0.0f;
     }
+    entity.setVelocity(velocity);
     entity.setLocation(location);
   }
 

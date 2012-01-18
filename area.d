@@ -106,4 +106,12 @@ class Area {
 
     return map.getTile(x, y);
   }
+
+  int getWidth() {
+    return MAP_WIDTH * TILE_SIZE * _areaSize;
+  }
+
+  int getHeight() {
+    return MAP_HEIGHT * TILE_SIZE * _areaSize;
+  }
 }

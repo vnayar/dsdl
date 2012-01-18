@@ -40,6 +40,7 @@ class Entity : /*implements*/ Collidable {
   protected DVect _location;
   protected DVect _velocity;
   protected DVect _maxVelocity;
+  protected DVect _jumpVelocity;
 
   // Accelleration when the object desires to move in a direction.
   protected DVect _moveAccel;
@@ -61,8 +62,9 @@ class Entity : /*implements*/ Collidable {
     _animControl = new Animation();
     _location = [0.0f, 0.0f];
     _velocity = [0.0f, 0.0f];
-    _maxVelocity = [10.0f, 10.0f];
-    _moveAccel = [0.5f, 0.75f];
+    _maxVelocity = [20.0f, 30.0f];
+    _moveAccel = [2.0f, 3.0f];
+    _jumpVelocity = [0.0f, -20.0f];
 
     _currentFrameCol = 0;
     _currentFrameRow = 0;
@@ -106,7 +108,7 @@ class Entity : /*implements*/ Collidable {
   }
 
   void jump() {
-    _velocity[1] -= 20.0f;
+    _velocity[] += _jumpVelocity[] * Fps.FpsControl.getSpeedFactor();
   }
 
   void setMoveLeft(bool move) {
@@ -190,9 +192,9 @@ class Entity : /*implements*/ Collidable {
    */
   void stopMove() {
     if (_velocity[0] < 0)
-      _velocity[0] += 1 * Fps.FpsControl.getSpeedFactor();
+      _velocity[0] += _moveAccel[0] * Fps.FpsControl.getSpeedFactor();
     else if (_velocity[0] > 0)
-      _velocity[0] -= 1 * Fps.FpsControl.getSpeedFactor();
+      _velocity[0] -= _moveAccel[0] * Fps.FpsControl.getSpeedFactor();
 
     if ((_velocity[0] < 2.0f) && (_velocity[0] > -2.0f))
       _velocity[0] = 0;

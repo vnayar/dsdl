@@ -58,7 +58,7 @@ class Game {
 		_eventDispatcher = this.new GameEventDispatcher();
     _player1 = new Player();
     _entity2 = new Entity();
-    _gravityField = new SimpleGravityField([0.0f, 0.75f]);
+    _gravityField = new SimpleGravityField([0.0f, 3.0f]);
     _gravityField.add(_player1);
     _collisionField = new CollisionField();
     _collisionField.add(_player1);
@@ -111,19 +111,16 @@ class Game {
     if (_player1.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
       return false;
     }
-    _player1.setLocation([100.0f, 75.0f]);
+    _player1.setLocation([20.0f, 75.0f]);
     _player1.setCollisionBoundary(Rectangle([8, 0], [48, 64]));
     Entity.EntityList ~= _player1;
-
-    // Set the camera to track our Yoshi.
-    Camera.CameraControl.setTarget(_player1);
 
     // A nemesis?  I don't like the look in his eye.
     if (_entity2.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
       return false;
     }
 
-    _entity2.setLocation([100.0f, 25.0f]);
+    _entity2.setLocation([150.0f, 25.0f]);
     Entity.EntityList ~= _entity2;
 
     // Now load the landscape we we play on.
@@ -131,7 +128,15 @@ class Game {
       return false;
     }
 
-    //SDL_EnableKeyRepeat(1, SDL_DEFAULT_REPEAT_INTERVAL / 3);
+    // Set the camera to track our Yoshi.
+    Camera.CameraControl.setBounds(Rectangle(
+      [0, 0],
+      [
+        Area.AreaControl.getWidth() - WWIDTH,
+        Area.AreaControl.getHeight() - WHEIGHT
+      ]
+    ));
+    Camera.CameraControl.setTarget(_player1);
 
 		return true;
 	}
