@@ -12,8 +12,8 @@ import area, camera;
 import physics.types, physics.collision, physics.gravity;
 
 class Game {
-	private bool _running;
-	private SDL_Surface* _surfDisplay;
+  private bool _running;
+  private SDL_Surface* _surfDisplay;
   private SDL_Surface* _surfTileset;
 
   private Player _player1;
@@ -22,16 +22,16 @@ class Game {
   private SimpleGravityField _gravityField;
   private CollisionField _collisionField;
 
-	// Our inner-class defines how we handle events.
-	private class GameEventDispatcher : EventDispatcher {
-		public:
-			override void onExit() {
-				this.outer._running = false;
-			}
+  // Our inner-class defines how we handle events.
+  private class GameEventDispatcher : EventDispatcher {
+    public:
+      override void onExit() {
+        this.outer._running = false;
+      }
 
-			override void onKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode) {
+      override void onKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode) {
         switch (sym) {
-				  case SDLK_ESCAPE: _running = false; break;
+          case SDLK_ESCAPE: _running = false; break;
           case SDLK_UP:     _player1.jump(); break;
           case SDLK_LEFT:   _player1.setMoveLeft(true); break;
           case SDLK_RIGHT:  _player1.setMoveRight(true); break;
@@ -46,66 +46,66 @@ class Game {
           default: break;
         }
       }
-	}
+  }
 
-	// Allow multiple subtyping by creating an alias for this.
-	private GameEventDispatcher _eventDispatcher;
-	alias _eventDispatcher this;
+  // Allow multiple subtyping by creating an alias for this.
+  private GameEventDispatcher _eventDispatcher;
+  alias _eventDispatcher this;
 
 
-	public this() {
-		_running = true;
-		_eventDispatcher = this.new GameEventDispatcher();
+  public this() {
+    _running = true;
+    _eventDispatcher = this.new GameEventDispatcher();
     _player1 = new Player();
     _entity2 = new Entity();
     _gravityField = new SimpleGravityField([0.0f, 3.0f]);
     _gravityField.add(_player1);
     _collisionField = new CollisionField();
     _collisionField.add(_player1);
-	}
+  }
 
-	public int onExecute() {
-		//writeln("onExecute()");
-		if (onInit() == false) {
-			return -1;
-		}
+  public int onExecute() {
+    //writeln("onExecute()");
+    if (onInit() == false) {
+      return -1;
+    }
 
-		SDL_Event event;
+    SDL_Event event;
 
-		while (_running) {
-			while (SDL_PollEvent(&event)) {
-				this.onEvent(event);
-			}
-			onLoop();
-			onRender();
-		}
+    while (_running) {
+      while (SDL_PollEvent(&event)) {
+        this.onEvent(event);
+      }
+      onLoop();
+      onRender();
+    }
 
-		onCleanup();
+    onCleanup();
 
-		return 0;
-	}
+    return 0;
+  }
 
-	public bool onInit() {
-		//writeln("onInit()");
-		DerelictSDL.load();
-		DerelictSDLImage.load();
-		DerelictGL.load();
-		DerelictGLU.load();
+  public bool onInit() {
+    //writeln("onInit()");
+    DerelictSDL.load();
+    DerelictSDLImage.load();
+    DerelictGL.load();
+    DerelictGLU.load();
 
-		if (SDL_Init(SDL_INIT_VIDEO) < 0)
-		{
-			throw new Exception("Couldn't init SDL: " ~ toDString(SDL_GetError()));
-		}
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    {
+      throw new Exception("Couldn't init SDL: " ~ toDString(SDL_GetError()));
+    }
 
-		SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
-		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-		if ((_surfDisplay =
-					SDL_SetVideoMode(WWIDTH, WHEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF)) == null)
-		{
-			throw new Exception("Failed to set video mode: " ~ toDString(SDL_GetError()));
-		}
+    if ((_surfDisplay =
+          SDL_SetVideoMode(WWIDTH, WHEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF)) == null)
+    {
+      throw new Exception("Failed to set video mode: " ~ toDString(SDL_GetError()));
+    }
 
     // Load graphics for our Yoshi.
     if (_player1.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
@@ -138,10 +138,10 @@ class Game {
     ));
     Camera.CameraControl.setTarget(_player1);
 
-		return true;
-	}
+    return true;
+  }
 
-	public void onLoop() {
+  public void onLoop() {
     _gravityField.onLoop();
     _collisionField.onLoop();
     foreach (entity; Entity.EntityList) {
@@ -150,8 +150,8 @@ class Game {
     }
   }
 
-	public void onRender() {
-		//writeln("onRender");
+  public void onRender() {
+    //writeln("onRender");
     Area.AreaControl.onRender(_surfDisplay,
         Camera.CameraControl.getX(),
         Camera.CameraControl.getY());
@@ -159,12 +159,12 @@ class Game {
       if (!entity) continue;
       entity.onRender(_surfDisplay);
     }
-		SDL_Flip(_surfDisplay);
-		SDL_Delay(50);
-	}
+    SDL_Flip(_surfDisplay);
+    SDL_Delay(50);
+  }
 
-	public void onCleanup() {
-		SDL_FreeSurface(_surfDisplay);
+  public void onCleanup() {
+    SDL_FreeSurface(_surfDisplay);
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
       entity.onCleanup();
@@ -173,13 +173,8 @@ class Game {
 
     Area.AreaControl.onCleanup();
 
-		if(SDL_Quit !is null)
-			SDL_Quit();
-	}
+    if(SDL_Quit !is null)
+      SDL_Quit();
+  }
 
-}
-
-void main() {
-	Game theGame = new Game;
-	return theGame.onExecute();
 }
