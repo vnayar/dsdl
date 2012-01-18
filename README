@@ -1,0 +1,7 @@
+This project is a simple game made to explore the capabilities of the D
+programming language.
+
+Programming Language:  D (version 2)
+Graphics Library:      SDL (wrapped using Derelict2)
+Image Library:         SDL Image (Derelict2)
+Sound Library:         SDL Mixer (Derelict2)
