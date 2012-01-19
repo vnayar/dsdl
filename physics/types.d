@@ -6,6 +6,15 @@ alias float[2] DVect;
 struct Rectangle {
   DVect location;
   DVect width;
+
+  bool isIntersect(in Rectangle r2) {
+    foreach (i; 0 .. DVect.length) {
+      if (location[i] + width[i] < r2.location[i] ||
+          r2.location[i] + r2.width[i] < location[i])
+        return false;
+    }
+    return true;
+  }
 }
 
 interface Locatable {
@@ -21,7 +30,7 @@ interface Movable : Locatable {
 // Objects that can collide define their boundaries.
 interface Collidable : Movable {
   Rectangle getCollisionBoundary();
-  void onCollision();
+  void onCollision(Collidable entity);
 }
 
 // Objects that gravity may act upon implement Gravitable.

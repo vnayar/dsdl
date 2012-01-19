@@ -60,8 +60,10 @@ class Game {
     _entity2 = new Entity();
     _gravityField = new SimpleGravityField([0.0f, 3.0f]);
     _gravityField.add(_player1);
+    _gravityField.add(_entity2);
     _collisionField = new CollisionField();
     _collisionField.add(_player1);
+    _collisionField.add(_entity2);
   }
 
   public int onExecute() {
@@ -120,7 +122,7 @@ class Game {
       return false;
     }
 
-    _entity2.setLocation([150.0f, 25.0f]);
+    _entity2.setLocation([300.0f, 25.0f]);
     Entity.EntityList ~= _entity2;
 
     // Now load the landscape we we play on.

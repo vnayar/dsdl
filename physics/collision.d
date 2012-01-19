@@ -12,23 +12,6 @@ import constants, area, tile, fps;
 class CollisionField : Field {
   private Collidable[] _entities;
 
-  private bool isIntersect(in Rectangle r1, in Rectangle r2) {
-    foreach (i; 0 .. DVect.length) {
-      if (r1.location[i] + r1.width[i] < r2.location[i] ||
-          r2.location[i] + r2.width[i] < r1.location[i])
-        return false;
-    }
-    return true;
-  }
-
-  /**
-   * FIXME: The set of colliders should not be hard-coded, but each one
-   *   should be an object added to this one.
-   */
-  private bool isLocationValid(in Rectangle boundary) {
-    return isLocationValidTile(boundary);
-  }
-
   private bool isLocationValidTile(in Rectangle boundary) {
     // In absolute coordinates, the boundary.
     int[DVect.length] startLoc;
@@ -49,7 +32,6 @@ class CollisionField : Field {
         if (tile is null)
           continue;
         if (tile.type == Tile.Type.BLOCK) {
-          // TODO:  Add logic to add a new collision.
           return false;
         }
       }
@@ -58,18 +40,10 @@ class CollisionField : Field {
     return true;
   }
 
-  private bool isLocationValidEntity(in Rectangle boundary) {
-    // TODO
-    return true;
-  }
-
   private void onMove(Collidable entity, in DVect move) {
     auto location = entity.getLocation();
     auto velocity = entity.getVelocity();
     auto boundary = entity.getCollisionBoundary();
-
-    // We will use the boundary in terms of absolute coordinates.
-    boundary.location[] += location[];
 
     // FIXME:  Calculate the movement vector, then incrementally move rather
     //   than by a single coordinate at a time.
@@ -91,7 +65,7 @@ class CollisionField : Field {
           incBoundary.width[i] = scale;
         }
         // This may trigger a collision event.
-        if (isLocationValid(incBoundary)) {
+        if (isLocationValidTile(incBoundary)) {
           // Move all at once if there is no collision.
           collision = false;
           location[i] += scale * unit;
@@ -121,8 +95,29 @@ class CollisionField : Field {
     foreach (entity; _entities) {
       // Our copy of speed so we know how far to go.
       DVect move = entity.getVelocity()[] * Fps.FpsControl.getSpeedFactor();
-
       onMove(entity, move);
+    }
+
+    // We detect collisions before calling 'onCollision' to prevent
+    // an entity from reacting in a way that invalidates later detection.
+    // e.g. Bullet his Mario and explodes before Mario detects collision.
+    Collidable[2][] collisions;
+    foreach (entity; _entities) {
+      // FIXME: Add entity data structure that makes it clear who may collide.
+      //   e.g. Divide the area into sections, and assign entities to their
+      //        sections, and only check collisions within a section.
+      Rectangle boundary = entity.getCollisionBoundary();
+      foreach (entity2; _entities) {
+        if (entity is entity2)
+          continue;
+        if (boundary.isIntersect(entity2.getCollisionBoundary())) {
+          collisions ~= [entity, entity2];
+        }
+      }
+    }
+
+    foreach (collision; collisions) {
+      collision[0].onCollision(collision[1]);
     }
   }
 }

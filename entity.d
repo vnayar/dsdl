@@ -94,11 +94,22 @@ class Entity : /*implements*/ Collidable {
 
   Rectangle getCollisionBoundary() {
     // The boundary is relative to the entity location.
-    return _collisionBoundary;
+    // We add our current location to put into absolute coordinates.
+    Rectangle bounds = _collisionBoundary;
+    bounds.location[] += _location[];
+    return bounds;
   }
 
-  void onCollision() {
-    writeln("Collision!");
+  void onCollision(Collidable entity) {
+    Rectangle bounds = getCollisionBoundary();
+    DVect entityVelocity = entity.getVelocity();
+    DVect transfer = [0.8f, 0.8f];
+    DVect reflect = [1.6f, 1.6f];
+    _velocity[] += transfer[] * entityVelocity[] *
+      Fps.FpsControl.getSpeedFactor();
+    entityVelocity[] -= reflect[] * entityVelocity[] *
+      Fps.FpsControl.getSpeedFactor();
+    entity.setVelocity(entityVelocity);
   }
 
   // Other
