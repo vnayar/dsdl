@@ -101,15 +101,6 @@ class Entity : /*implements*/ Collidable {
   }
 
   void onCollision(Collidable entity) {
-    Rectangle bounds = getCollisionBoundary();
-    DVect entityVelocity = entity.getVelocity();
-    DVect transfer = [0.8f, 0.8f];
-    DVect reflect = [1.6f, 1.6f];
-    _velocity[] += transfer[] * entityVelocity[] *
-      Fps.FpsControl.getSpeedFactor();
-    entityVelocity[] -= reflect[] * entityVelocity[] *
-      Fps.FpsControl.getSpeedFactor();
-    entity.setVelocity(entityVelocity);
   }
 
   // Other
@@ -119,7 +110,7 @@ class Entity : /*implements*/ Collidable {
   }
 
   void jump() {
-    _velocity[] += _jumpVelocity[] * Fps.FpsControl.getSpeedFactor();
+    _velocity[1] = _jumpVelocity[1];
   }
 
   void setMoveLeft(bool move) {
@@ -207,7 +198,7 @@ class Entity : /*implements*/ Collidable {
     else if (_velocity[0] > 0)
       _velocity[0] -= _moveAccel[0] * Fps.FpsControl.getSpeedFactor();
 
-    if ((_velocity[0] < 2.0f) && (_velocity[0] > -2.0f))
+    if ((_velocity[0] < 0.5f) && (_velocity[0] > -0.5))
       _velocity[0] = 0;
   }
 
