@@ -6,3 +6,5 @@ Build Utility:         DSSS
 Graphics Library:      SDL (wrapped using Derelict2)
 Image Library:         SDL Image (Derelict2)
 Sound Library:         SDL Mixer (Derelict2)
+
+Level Editor GUI:      GtkD
