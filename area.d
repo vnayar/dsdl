@@ -25,12 +25,15 @@ class Area {
     scope (exit) { f.close(); }
 
     string tilesetFileName;
-    f.readf("%s\n", &tilesetFileName);
 
+    // Read the image file for the tile-set.
+    f.readf("%s\n", &tilesetFileName);
     _surfTileset = Surface.onLoad(tilesetFileName);
 
+    // Read the width and height in maps.
     f.readf("%d\n", &_areaSize);
 
+    // Load the maps and add them to the list.
     foreach (x; 0 .. _areaSize) {
       auto fileNames = split(f.readln());
       assert(fileNames.length == _areaSize);

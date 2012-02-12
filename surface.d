@@ -10,7 +10,7 @@ class Surface {
 	public static SDL_Surface* onLoad(in string file) {
 		SDL_Surface* surfTemp, surfReturn;
 		//if ((surfTemp = SDL_LoadBMP(file.ptr)) == null) {
-		if ((surfTemp = IMG_Load(file.ptr)) == null) {
+		if ((surfTemp = IMG_Load(toCString(file))) == null) {
 			throw new Exception("Could not open file " ~ file ~ ": "
 					~ toDString(SDL_GetError()));
 		}

@@ -43,8 +43,8 @@ int main(string[] args)
 	}
 	else
 	{
-		writefln("No glade file specified, using default \"editor.glade\"");
-		gladefile = "editor.glade";
+		writefln("No glade file specified, using default \"editor2.glade\"");
+		gladefile = "editor2.glade";
 	}
 
 	Builder g = new Builder();
