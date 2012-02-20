@@ -113,7 +113,7 @@ class Game {
     if (_player1.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
       return false;
     }
-    _player1.setLocation([20.0f, 75.0f]);
+    _player1.setLocation([20.0f, 25.0f]);
     _player1.setCollisionBoundary(Rectangle([16, 0], [40, 64]));
     Entity.EntityList ~= _player1;
 
@@ -127,7 +127,7 @@ class Game {
     Entity.EntityList ~= _entity2;
 
     // Now load the landscape we we play on.
-    if (Area.AreaControl.onLoad("./maps/1.area") == false) {
+    if (Area.AreaControl.onLoad("./maps/Demo.area") == false) {
       return false;
     }
 

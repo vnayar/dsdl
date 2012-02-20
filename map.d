@@ -20,6 +20,7 @@ class Map {
   //private Tile[] _tileList;
 
   private TileSet _tileSet;
+  int[] _tileList;
 
   TileSet getTileSet() {
     return _tileSet;
@@ -63,64 +64,91 @@ class Map {
    */
   bool loadFromTmxFile(string fileName) {
     string xmlData = cast(string)std.file.read(fileName);
-    _tileSet = loadFromTmx(xmlData);
-    return true;
+
+    return loadFromTmx(xmlData);
   }
 
-  TileSet loadFromTmx(string xmlData) {
-    TileSet tileSet = new TileSet();
+  bool loadFromTmx(string xmlData) {
+    _tileSet = new TileSet();
+    _tileList.length = 0;
+
     string tileSetImageName;
+    int imageWidth;
+    int imageHeight;
+    int tileWidth;
+    int tileHeight;
 
     // Check for XML syntax compliance.
     check(xmlData);
 
-    writeln("Testing with data:\n", xmlData);
+    //writeln("Testing with data:\n", xmlData);
     auto xml = new DocumentParser(xmlData);
-
-    xml.onText = (string txt) {
-      writeln("Found Text: ", txt);
-    };
 
     //writeln("onStart: ", xml.tag.name);
     xml.onStartTag["tileset"] = (ElementParser xml) {
-      writeln("onStart: tileset");
+      //writeln("onStart: tileset");
+      tileWidth = to!int(xml.tag.attr["tilewidth"]);
+      tileHeight = to!int(xml.tag.attr["tileheight"]);
       // Read out image information.
       xml.onEndTag["image"] = (in Element e) {
+        imageWidth = to!int(e.tag.attr["width"]);
+        imageHeight = to!int(e.tag.attr["height"]);
         tileSetImageName = e.tag.attr["source"];
+
+        // Initialize our tiles (not all will have properties).
+        int numTiles = imageHeight / tileHeight * imageWidth / tileWidth;
+        _tileSet.tiles.length = numTiles;
+        foreach (id, ref tile; _tileSet.tiles) {
+          tile = new Tile();
+          tile.id = id;
+        }
       };
       // Read all tiles.
       xml.onStartTag["tile"] = (ElementParser xml) {
-        writeln("onStart: tile");
-        Tile tile = new Tile();
-        tile.id = to!int(xml.tag.attr["id"]);
+        //writeln("onStart: tile");
+        int id = to!int(xml.tag.attr["id"]);
 
         // Skip to the property we want.
         xml.onStartTag["property"] = (ElementParser xml) {
           if ("name" in xml.tag.attr && xml.tag.attr["name"] == "type" &&
               "value" in xml.tag.attr) {
-            tile.type = cast(Tile.Type) to!int(xml.tag.attr["value"]);
+            _tileSet.tiles[id].type = cast(Tile.Type) to!int(xml.tag.attr["value"]);
           }
         };
         xml.parse();
-
-        tileSet.tiles ~= tile;
       };
       xml.parse();
     };
 
-    // TODO: Insert parsing logic for layer.
+    // Parse the layer, which specifies which tiles cover the map.
+    xml.onStartTag["layer"] = (ElementParser xml) {
+      // First set aside enough room for our tiles.
+      int width = to!int(xml.tag.attr["width"]);
+      int height = to!int(xml.tag.attr["height"]);
+      _tileList.length = width * height;
 
-    writeln("Starting parse.");
+      int id = 0;
+
+      // Read each tile out and get the id used to reference the TileSet.
+      xml.onEndTag["tile"] = (in Element e) {
+        _tileList[id] = to!int(e.tag.attr["gid"]) - 1;
+        id++;
+      };
+      xml.parse();
+    };
+
+    //writeln("Starting parse.");
     xml.parse();
 
     if (tileSetImageName.length == 0)
-      return null;
+      throw new Exception("MapFile missing source attribute in image tag!");
 
     writeln("Loading image: ", tileSetImageName);
-    tileSet.surface = Surface.onLoad(tileSetImageName);
+    _tileSet.surface = Surface.onLoad("./maps/" ~ tileSetImageName);
 
-    return tileSet;
+    return true;
   }
+
   unittest {
     string testXmlData = q"EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -138,6 +166,14 @@ class Map {
    </properties>
   </tile>
  </tileset>
+ <layer name="Tile Layer 1" width="2" height="2">
+   <data>
+     <tile gid="2"/>
+     <tile gid="1"/>
+     <tile gid="2"/>
+     <tile gid="1"/>
+   </data>
+ </layer>
 </map>
 EOF";
 
@@ -150,28 +186,37 @@ EOF";
     }
 
     Map map = new Map();
-    TileSet tileSet = map.loadFromTmx(testXmlData);
+    map.loadFromTmx(testXmlData);
+    TileSet tileSet = map.getTileSet();
   
     assert(tileSet !is null, "Returned null value.");
-    assert(tileSet.tiles.length == 2, "Incorrect 'tiles.length'.");
+    assert(tileSet.tiles.length == 12, "Incorrect 'tiles.length'.");
     assert(tileSet.tiles[0].id == 0);
     assert(tileSet.tiles[1].type == Tile.Type.NORMAL, "Incorrect type " ~ to!string(tileSet.tiles[1].type));
+    assert(tileSet.tiles[2].type == Tile.Type.NONE, "Bad default type " ~ to!string(tileSet.tiles[2].type));
+
+    assert(map._tileList[0] == 1, "tileList[0] == 1, found " ~ to!string(map._tileList[0]));
+    assert(map._tileList.length == 4, "_tileList.length == 4, found " ~ to!string(map._tileList.length));
 
     SDL_Quit();
   }
 
-  /*
   void onRender(SDL_Surface* surfDisplay, int mapX, int mapY) {
-    if (_surfTileset == null) return;
+    if (_tileSet.surface == null) return;
 
-    int tilesetWidth = _surfTileset.w / TILE_SIZE;
-    int tilesetHeight = _surfTileset.h / TILE_SIZE;
+    int tilesetWidth = _tileSet.surface.w / TILE_SIZE;
+    int tilesetHeight = _tileSet.surface.h / TILE_SIZE;
 
     int id = 0;
+
+    writeln("Total tiles: ", _tileSet.tiles.length);
     
     foreach (y; 0 .. MAP_HEIGHT) {
       foreach (x; 0 .. MAP_WIDTH) {
-        if (_tileList[id].type == Tile.Type.NONE) {
+        // Get the tile to draw from the TileSet using its id from the tileList.
+        Tile tile = _tileSet.tiles[_tileList[id]];
+
+        if (tile.type == Tile.Type.NONE) {
           id++;
           continue;
         }
@@ -179,30 +224,30 @@ EOF";
         int tX = mapX + (x * TILE_SIZE);
         int tY = mapY + (y * TILE_SIZE);
 
-        int tilesetX = (_tileList[id].id % tilesetWidth) * TILE_SIZE;
-        int tilesetY = (_tileList[id].id / tilesetWidth) * TILE_SIZE;
+        int tilesetX = (tile.id % tilesetWidth) * TILE_SIZE;
+        int tilesetY = (tile.id / tilesetWidth) * TILE_SIZE;
 
         Surface.onDraw(
-          _surfTileset, tilesetX, tilesetY, TILE_SIZE, TILE_SIZE,
+          _tileSet.surface, tilesetX, tilesetY, TILE_SIZE, TILE_SIZE,
           surfDisplay, tX, tY);
 
         id++;
       }
     }
   }
-  */
 
   /**
    * Gets the tile from coordinates relative to the map.
    */
-  /*
   Tile getTile(int x, int y) {
     int id = x / TILE_SIZE + y / TILE_SIZE * MAP_WIDTH;
 
-    if (id < 0 || id > _tileList.length)
+    if (id < 0 || id >= _tileList.length)
       return null;
 
-    return _tileList[id];
+    if (_tileList[id] < 0 || _tileList[id] >= _tileSet.tiles.length) {
+      writeln("Tile ", _tileList[id], " is out of range ", _tileSet.tiles.length);
+    }
+    return _tileSet.tiles[_tileList[id]];
   }
-  */
 }

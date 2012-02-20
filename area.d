@@ -9,7 +9,6 @@ import constants, map, tile, surface;
 
 class Area {
   private Map[] _mapList;
-  private SDL_Surface* _surfTileset;
   private int _areaSize;
 
   static Area AreaControl;
@@ -26,10 +25,6 @@ class Area {
 
     string tilesetFileName;
 
-    // Read the image file for the tile-set.
-    f.readf("%s\n", &tilesetFileName);
-    _surfTileset = Surface.onLoad(tilesetFileName);
-
     // Read the width and height in maps.
     f.readf("%d\n", &_areaSize);
 
@@ -40,10 +35,9 @@ class Area {
       foreach (mapFileName; fileNames) {
 
         Map tempMap = new Map();
-        if (tempMap.onLoad(mapFileName) == false)
+        if (tempMap.loadFromTmxFile(mapFileName) == false)
           return false;
 
-        tempMap.setTileset(_surfTileset);
         _mapList ~= tempMap;
       }
     }
@@ -70,10 +64,6 @@ class Area {
   }
 
   void onCleanup() {
-    if (_surfTileset) {
-      SDL_FreeSurface(_surfTileset);
-    }
-
     _mapList.length = 0;
   }
 
@@ -85,7 +75,7 @@ class Area {
     int mapHeight = MAP_HEIGHT * TILE_SIZE;
     int id = x / mapWidth + y / mapHeight * _areaSize;
 
-    if (id < 0 || id > _mapList.length) {
+    if (id < 0 || id >= _mapList.length) {
       return null;
     }
 
