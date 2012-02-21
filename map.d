@@ -60,12 +60,9 @@ class Map {
     debug check(xmlData); // Validating takes around 26s.
     debug writeln("Verified XML in ", sw.peek.msecs, "ms.");
 
-    //writeln("Testing with data:\n", xmlData);
     auto xml = new DocumentParser(xmlData);
 
-    //writeln("onStart: ", xml.tag.name);
     xml.onStartTag["tileset"] = (ElementParser xml) {
-      //writeln("onStart: tileset");
       tileWidth = to!int(xml.tag.attr["tilewidth"]);
       tileHeight = to!int(xml.tag.attr["tileheight"]);
       // Read out image information.
@@ -84,7 +81,6 @@ class Map {
       };
       // Read all tiles.
       xml.onStartTag["tile"] = (ElementParser xml) {
-        //writeln("onStart: tile");
         int id = to!int(xml.tag.attr["id"]);
 
         // Skip to the property we want.
@@ -116,7 +112,6 @@ class Map {
       xml.parse();
     };
 
-    //writeln("Starting parse.");
     debug sw = StopWatch(AutoStart.yes);
     xml.parse();
     debug writeln("Parsed XML in ", sw.peek.msecs, "ms.");
@@ -124,7 +119,7 @@ class Map {
     if (tileSetImageName.length == 0)
       throw new Exception("MapFile missing source attribute in image tag!");
 
-    writeln("Loading image: ", tileSetImageName);
+    debug writeln("Loading image: ", tileSetImageName);
     _tileSet.surface = Surface.onLoad("./maps/" ~ tileSetImageName);
 
     return true;

@@ -62,9 +62,9 @@ class Entity : /*implements*/ Collidable {
     _animControl = new Animation();
     _location = [0.0f, 0.0f];
     _velocity = [0.0f, 0.0f];
-    _maxVelocity = [20.0f, 30.0f];
-    _moveAccel = [2.0f, 3.0f];
-    _jumpVelocity = [0.0f, -20.0f];
+    _maxVelocity = [10.0f, 15.0f];
+    _moveAccel = [1.0f, 1.5f];
+    _jumpVelocity = [0.0f, -16.0f];
 
     _currentFrameCol = 0;
     _currentFrameRow = 0;
@@ -198,7 +198,7 @@ class Entity : /*implements*/ Collidable {
     else if (_velocity[0] > 0)
       _velocity[0] -= _moveAccel[0] * Fps.FpsControl.getSpeedFactor();
 
-    if ((_velocity[0] < 0.5f) && (_velocity[0] > -0.5))
+    if ((_velocity[0] < 0.25f) && (_velocity[0] > -0.25))
       _velocity[0] = 0;
   }
 

@@ -110,20 +110,20 @@ class Game {
     }
 
     // Load graphics for our Yoshi.
-    if (_player1.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
+    if (_player1.onLoad("./gfx/yoshi3.png", 32, 32, 8) == false) {
       return false;
     }
-    _player1.setLocation([20.0f, 25.0f]);
-    _player1.setCollisionBoundary(Rectangle([16, 0], [40, 64]));
+    _player1.setLocation([20.0f, 20.0f]);
+    _player1.setCollisionBoundary(Rectangle([6, 0], [20, 32]));
     Entity.EntityList ~= _player1;
 
     // A nemesis?  I don't like the look in his eye.
-    if (_entity2.onLoad("./gfx/yoshi2.png", 64, 64, 8) == false) {
+    if (_entity2.onLoad("./gfx/yoshi3.png", 32, 32, 8) == false) {
       return false;
     }
 
-    _entity2.setLocation([300.0f, 25.0f]);
-    _entity2.setCollisionBoundary(Rectangle([16, 0], [40, 64]));
+    _entity2.setLocation([300.0f, 20.0f]);
+    _entity2.setCollisionBoundary(Rectangle([6, 0], [20, 32]));
     Entity.EntityList ~= _entity2;
 
     // Now load the landscape we we play on.
