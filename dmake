@@ -2,8 +2,10 @@
 
 set -x
 
+# Add custom compiler flags on the command-prompt with DFLAGS.
+
 DC=rdmd
-DM_CFLAGS="-I/home/vnayar/d/include/d"
+DM_DFLAGS="-I/home/vnayar/d/include/d"
 DM_LDFLAGS="-L-L/home/vnayar/d/lib -L-ldl -L-lGL -L-lSDL_image -L-lDerelictSDL -L-lDerelictUtil -L-lDerelictGL"
 BUILD_DIR="build"
 
@@ -30,4 +32,4 @@ build|*)
   ;;
 esac
 
-$DC $TASK_FLAGS $DM_CFLAGS $DM_LDFLAGS $SRC
+$DC $TASK_FLAGS $DM_DFLAGS $DM_LDFLAGS $DFLAGS $SRC

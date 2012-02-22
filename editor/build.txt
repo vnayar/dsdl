@@ -1,1 +1,0 @@
-rdmd --build-only -ofeditor -I/home/vnayar/d/include/d -L-L/home/vnayar/d/lib -L-lgtkd -L-ldl --chatty editor.d

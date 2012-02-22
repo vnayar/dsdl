@@ -1,10 +1,10 @@
 This project is a simple game made to explore the capabilities of the D
 programming language.
 
-Programming Language:  D (version 2)
-Build Utility:         DSSS
-Graphics Library:      SDL (wrapped using Derelict2)
-Image Library:         SDL Image (Derelict2)
-Sound Library:         SDL Mixer (Derelict2)
+Programming Language:  D (version 2.058)
+Build Utility:         SH + rdmd
+Graphics Library:      SDL (Derelict2 r629)
+Image Library:         SDL Image (Derelict2 r629)
+Sound Library:         SDL Mixer (Derelict2 r629)
 
-Level Editor GUI:      GtkD
+Level Editor:          tiled (http://www.mapeditor.org)

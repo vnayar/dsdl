@@ -3,6 +3,7 @@ module map;
 import std.stdio;
 import std.conv;
 import std.xml;
+import std.file;
 
 import derelict.sdl.sdl;
 

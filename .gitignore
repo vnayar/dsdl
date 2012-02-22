@@ -4,3 +4,6 @@
 *.last
 *~
 .*
+
+# Ignore our build targets.
+game
