@@ -6,7 +6,7 @@ set -x
 
 DC=rdmd
 DM_DFLAGS="-I/home/vnayar/d/include/d"
-DM_LDFLAGS="-L-L/home/vnayar/d/lib -L-ldl -L-lGL -L-lSDL_image -L-lDerelictSDL -L-lDerelictUtil -L-lDerelictGL"
+DM_LDFLAGS="-L-L/home/vnayar/d/lib -L-lSDL_image -L-lDerelictSDL -L-lDerelictUtil -L-lDerelictGL -L-lGL -L-ldl"
 BUILD_DIR="build"
 
 if ! test -e $BUILD_DIR ; then

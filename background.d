@@ -14,13 +14,13 @@ class Background {
 
   public this() {}
   public ~this() {
-    if (_sdlSurface !is null)
+    if (_sdlSurface)
       SDL_FreeSurface(_sdlSurface);
   }
 
   public void onLoad(in string file) {
     // Make sure we don't send the old surface into space.
-    if (_sdlSurface !is null)
+    if (_sdlSurface)
       SDL_FreeSurface(_sdlSurface);
 
     _sdlSurface = Surface.onLoad(file);
