@@ -58,8 +58,8 @@ class Map {
 
     debug StopWatch sw = StopWatch(AutoStart.yes);
     // Check for XML syntax compliance.
-    debug check(xmlData); // Validating takes around 26s.
-    debug writeln("Verified XML in ", sw.peek.msecs, "ms.");
+    //debug check(xmlData); // Validating takes around 26s.
+    //debug writeln("Verified XML in ", sw.peek.msecs, "ms.");
 
     auto xml = new DocumentParser(xmlData);
 

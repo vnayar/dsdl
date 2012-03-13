@@ -8,7 +8,7 @@ import derelict.util.compat;
 import std.stdio;
 
 import constants, surface, event, entity, player;
-import area, camera;
+import area, camera, background;
 import physics.types, physics.collision, physics.gravity;
 
 class Game {
@@ -21,6 +21,8 @@ class Game {
 
   private SimpleGravityField _gravityField;
   private CollisionField _collisionField;
+
+  private Background _background;
 
   // Our inner-class defines how we handle events.
   private class GameEventDispatcher : EventDispatcher {
@@ -56,6 +58,7 @@ class Game {
   public this() {
     _running = true;
     _eventDispatcher = this.new GameEventDispatcher();
+    _background = new Background();
     _player1 = new Player();
     _entity2 = new Entity();
     _gravityField = new SimpleGravityField([0.0f, 3.0f]);
@@ -109,6 +112,9 @@ class Game {
       throw new Exception("Failed to set video mode: " ~ toDString(SDL_GetError()));
     }
 
+    // Load our background image.
+    _background.onLoad("./gfx/image_img_4780_640_480.jpg");
+
     // Load graphics for our Yoshi.
     if (_player1.onLoad("./gfx/yoshi3.png", 32, 32, 8) == false) {
       return false;
@@ -155,14 +161,24 @@ class Game {
 
   public void onRender() {
     //writeln("onRender");
+    // Draw the background below everything else.
+    _background.onRender(_surfDisplay);
+
+    // Draw our tiled area.
     Area.AreaControl.onRender(_surfDisplay,
         Camera.CameraControl.getX(),
         Camera.CameraControl.getY());
+
+    // Draw players and enemies.
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
       entity.onRender(_surfDisplay);
     }
+
+    // Swap the screen with our surface (prevents flickering while drawing)
     SDL_Flip(_surfDisplay);
+
+    // FIXME: This is here to spare my poor CPU.
     SDL_Delay(50);
   }
 
