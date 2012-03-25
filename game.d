@@ -113,7 +113,7 @@ class Game {
     }
 
     // Load our background image.
-    _background.onLoad("./gfx/image_img_4780_640_480.jpg");
+    _background.onLoad("./gfx/Natural_Dam,_Ozark_National_Forest,_Arkansas.jpg");
 
     // Load graphics for our Yoshi.
     if (_player1.onLoad("./gfx/yoshi3.png", 32, 32, 8) == false) {
@@ -137,15 +137,21 @@ class Game {
       return false;
     }
 
-    // Set the camera to track our Yoshi.
-    Camera.CameraControl.setBounds(Rectangle(
+    // Set bounds for how far the camera may move.
+    Rectangle cameraBounds = Rectangle(
       [0, 0],
       [
         Area.AreaControl.getWidth() - WWIDTH,
         Area.AreaControl.getHeight() - WHEIGHT
       ]
-    ));
+    );
+    Camera.CameraControl.setBounds(cameraBounds);
+    // Let the background parallax with the camera.
+    _background.setParallaxBounds(cameraBounds);
+    
+    // Set the camera to track our Yoshi.
     Camera.CameraControl.setTarget(_player1);
+
 
     return true;
   }
