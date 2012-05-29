@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<level>
+
+  <!-- Camera Configuration -->
+  <camera></camera>
+
+  <!-- Music Files -->
+  <music></music>
+
+  <!-- Area file -->
+  <area size="3">
+	<row>
+	  <map>./maps/DemoMap.tmx</map>
+	  <map>./maps/DemoMap.tmx</map>
+	  <map>./maps/DemoMap.tmx</map>
+	</row>
+	<row>
+	  <map>./maps/DemoMap.tmx</map>
+	  <map>./maps/DemoMap.tmx</map>
+	  <map>./maps/DemoMap.tmx</map>
+	</row>
+	<row>
+	  <map>./maps/DemoMap.tmx</map>
+	  <map>./maps/DemoMap.tmx</map>
+	  <map>./maps/DemoMap.tmx</map>
+	</row>
+  </area>
+
+  <!-- Entities that may be interacted with -->
+  <entities></entities>
+
+</level>

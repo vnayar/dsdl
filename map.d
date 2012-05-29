@@ -20,6 +20,9 @@ version(unittest) {
 import constants, tile, surface;
 
 
+/**
+ * A tile-based drawable grid with helper functions.
+ */
 class Map {
   private TileSet _tileSet;
   int[] _tileList;

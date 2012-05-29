@@ -8,7 +8,7 @@ import derelict.util.compat;
 import std.stdio;
 
 import constants, surface, event, entity, player;
-import area, camera, background;
+import area, camera, background, level;
 import physics.types, physics.collision, physics.gravity;
 
 class Game {
@@ -23,6 +23,9 @@ class Game {
   private CollisionField _collisionField;
 
   private Background _background;
+
+  // Eventually store all level-specific data here.
+  private Level _level;
 
   // Our inner-class defines how we handle events.
   private class GameEventDispatcher : EventDispatcher {
@@ -67,6 +70,8 @@ class Game {
     _collisionField = new CollisionField();
     _collisionField.add(_player1);
     _collisionField.add(_entity2);
+
+	_level = new Level();
   }
 
   public int onExecute() {
@@ -133,9 +138,10 @@ class Game {
     Entity.EntityList ~= _entity2;
 
     // Now load the landscape we we play on.
-    if (Area.AreaControl.onLoad("./maps/Demo.area") == false) {
-      return false;
-    }
+    //if (Area.AreaControl.onLoad("./maps/Demo.area") == false) {
+    //  return false;
+    //}
+    _level.loadFromXmlFile("./levels/level1.xml");
 
     // Set bounds for how far the camera may move.
     Rectangle cameraBounds = Rectangle(
