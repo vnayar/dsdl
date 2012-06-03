@@ -5,6 +5,7 @@ import derelict.sdl.sdl;
 
 import surface, animation, area, camera, fps;
 import physics.types;
+import resource.image;
 
 /**
  * Anything that can be interacted with or move other than the map.
@@ -122,9 +123,7 @@ class Entity : /*implements*/ Collidable {
   }
 
   bool onLoad(string file, int width, int height, int maxFrames) {
-    if ((_surfEntity = Surface.onLoad(file)) == null) {
-      return false;
-    }
+    _surfEntity = ImageBank.IMAGES[file];
 
     Surface.setTransparent(_surfEntity, 255, 0, 255);
 
@@ -169,9 +168,6 @@ class Entity : /*implements*/ Collidable {
   }
 
   void onCleanup() {
-    if (_surfEntity) {
-      SDL_FreeSurface(_surfEntity);
-    }
     _surfEntity = null;
   }
 
@@ -201,6 +197,28 @@ class Entity : /*implements*/ Collidable {
     if ((_velocity[0] < 0.25f) && (_velocity[0] > -0.25))
       _velocity[0] = 0;
   }
+
+  /**
+   * A collection of settings that can be applied to many entities.
+   */
+  struct EntitySetting {
+	DVect maxVelocity;
+	DVect moveAccel;
+	DVect jumpVelocity;
+
+	int width;
+	int height;
+	string image;
+  }
+
+  //static EntitySetting[string] EntitySettings = [];
+
+  /**
+   * Parser logic to read from XML file.
+   * 
+   */
+  //static void delegate (ElementParser) parseXmlEntites(Entity entity) {
+  //}
 
 }
 

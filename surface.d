@@ -5,6 +5,9 @@ import derelict.sdl.image;
 import derelict.util.compat;
 import std.stdio;
 
+/**
+ * Wrapper utility for loading SDL surfaces.
+ */
 class Surface {
 	public this() {}
 	public static SDL_Surface* onLoad(in string file) {

@@ -10,9 +10,11 @@ import std.stdio;
 import constants, surface, event, entity, player;
 import area, camera, background, level;
 import physics.types, physics.collision, physics.gravity;
+import resource.image;
 
 class Game {
   private bool _running;
+
   private SDL_Surface* _surfDisplay;
   private SDL_Surface* _surfTileset;
 
@@ -116,6 +118,9 @@ class Game {
     {
       throw new Exception("Failed to set video mode: " ~ toDString(SDL_GetError()));
     }
+
+	ImageBank.load("./gfx", [".png", ".jpg"]);
+	ImageBank.load("./tileset", [".png"]);
 
     // Load our background image.
     _background.onLoad("./gfx/Natural_Dam,_Ozark_National_Forest,_Arkansas.jpg");

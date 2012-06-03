@@ -18,7 +18,7 @@ version(unittest) {
 }
 
 import constants, tile, surface;
-
+import resource.image;
 
 /**
  * A tile-based drawable grid with helper functions.
@@ -124,7 +124,7 @@ class Map {
       throw new Exception("MapFile missing source attribute in image tag!");
 
     debug writeln("Loading image: ", tileSetImageName);
-    _tileSet.surface = Surface.onLoad("./maps/" ~ tileSetImageName);
+    _tileSet.surface = ImageBank.IMAGES[tileSetImageName];
 
     return true;
   }

@@ -138,7 +138,7 @@ class Area {
 
 		area._mapList ~= tempMap;
 	  };
-
+	  // Parse over the entire element, reading all maps.
 	  parser.parse();
 	};
   }

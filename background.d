@@ -4,6 +4,7 @@ import derelict.sdl.sdl;
 
 import surface, camera, constants;
 import physics.types;
+import resource.image;
 
 
 /**
@@ -16,18 +17,8 @@ class Background {
   private bool _hasParallaxBounds;
   private Rectangle _parallaxBounds;
 
-  public this() {}
-  public ~this() {
-    if (_sdlSurface)
-      SDL_FreeSurface(_sdlSurface);
-  }
-
   public void onLoad(in string file) {
-    // Make sure we don't send the old surface into space.
-    if (_sdlSurface)
-      SDL_FreeSurface(_sdlSurface);
-
-    _sdlSurface = Surface.onLoad(file);
+    _sdlSurface = ImageBank.IMAGES[file];
   }
 
   public void onRender(SDL_Surface* surfDisplay) {

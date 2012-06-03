@@ -12,9 +12,4 @@ class Tile {
 class TileSet {
   SDL_Surface* surface;
   Tile[] tiles;
-
-  ~this() {
-    if (surface)
-      SDL_FreeSurface(surface);
-  }
 }
