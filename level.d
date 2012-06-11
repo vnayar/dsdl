@@ -3,7 +3,7 @@ module level;
 import std.xml;
 import std.file;
 
-import area;
+import area, entityconfig;
 
 /**
  * Container for all objects that make up a level.
@@ -12,6 +12,8 @@ import area;
  * left behind.
  */
 class Level {
+  EntityConfig[string] entityConfigs;
+
   bool loadFromXmlFile(string fileName) {
 	string xmlData = cast(string) std.file.read(fileName);
 	return loadFromXml(xmlData);
@@ -20,7 +22,8 @@ class Level {
   bool loadFromXml(string xmlData) {
 	auto xml = new DocumentParser(xmlData);
 
-	xml.onStartTag["area"] = Area.parseXmlArea(Area.AreaControl);
+	xml.onStartTag["area"] = Area.getXmlParser(Area.AreaControl);
+    xml.onStartTag["entityConfig"] = EntityConfig.getXmlParser(entityConfigs);
 	xml.parse();
 
 	return true;

@@ -122,7 +122,7 @@ class Area {
    * An element parser must take a single argument, thus one
    * should curry the first argument before adding to the parser.
    */
-  static void delegate (ElementParser) parseXmlArea(Area area) {
+  static void delegate(ElementParser) getXmlParser(Area area) {
 	// Re-initialize our area object.
 	area._mapList.length = 0;
 	area._areaSize = 0;

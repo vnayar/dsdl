@@ -1,11 +1,14 @@
 module entity;
 
 import std.stdio;
+import std.xml;
 import derelict.sdl.sdl;
 
 import surface, animation, area, camera, fps;
+import entityconfig;
 import physics.types;
 import resource.image;
+
 
 /**
  * Anything that can be interacted with or move other than the map.
@@ -138,6 +141,16 @@ class Entity : /*implements*/ Collidable {
     return true;
   }
 
+  // Allow alternate initialization from a configuration template.
+  bool onLoad(EntityConfig entityConfig) {
+    onLoad(entityConfig.image, entityConfig.width, entityConfig.height, entityConfig.maxFrames);
+    _maxVelocity = entityConfig.maxVelocity;
+    _moveAccel = entityConfig.moveAccel;
+    _jumpVelocity = entityConfig.jumpVelocity;
+    _collisionBoundary = entityConfig.collisionBoundary;
+    return true;
+  }
+
   void onLoop() {
     if (!_moveLeft && !_moveRight)
       stopMove();
@@ -198,29 +211,17 @@ class Entity : /*implements*/ Collidable {
       _velocity[0] = 0;
   }
 
-  /**
-   * A collection of settings that can be applied to many entities.
-   */
-  struct EntitySetting {
-	DVect maxVelocity;
-	DVect moveAccel;
-	DVect jumpVelocity;
 
-	int width;
-	int height;
-	string image;
-  }
-
-  //static EntitySetting[string] EntitySettings = [];
 
   /**
    * Parser logic to read from XML file.
    * 
    */
-  //static void delegate (ElementParser) parseXmlEntites(Entity entity) {
+  //static void delegate (ElementParser) getXmlParser(Entity entity) {
   //}
 
 }
+
 
 class EntityCol {
   static EntityCol[] EntityColList;

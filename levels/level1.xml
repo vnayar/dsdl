@@ -26,7 +26,45 @@
 	</row>
   </area>
 
+  <!-- Sets of default settings individual entities may use. -->
+  <entityConfigs>
+	<entityConfig id="yoshi">
+	  <!-- Movement settings -->
+	  <maxVelocity>
+		<value>10.0</value>
+		<value>15.0</value>
+	  </maxVelocity>
+	  <moveAccel>
+		<value>1.0</value>
+		<value>1.5</value>
+	  </moveAccel>
+	  <jumpVelocity>
+		<value>0.0</value>
+		<value>-16.0</value>
+	  </jumpVelocity>
+	  <!-- Sprite information -->
+	  <sprite>
+		<image>./gfx/yoshi3.png</image>
+		<width>32</width>
+		<height>32</height>
+		<maxFrames>8</maxFrames>
+	  </sprite>
+	  <!-- The part of the image that may collide. -->
+	  <collisionBoundary>
+		<location>
+		  <value>6</value>
+		  <value>0</value>
+		</location>
+		<width>
+		  <value>20</value>
+		  <value>32</value>
+		</width>
+	  </collisionBoundary>
+	</entityConfig>
+  </entityConfigs>
+
   <!-- Entities that may be interacted with -->
-  <entities></entities>
+  <entities>
+  </entities>
 
 </level>
