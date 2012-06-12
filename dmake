@@ -5,8 +5,8 @@ set -x
 # Add custom compiler flags on the command-prompt with DFLAGS.
 
 DC=rdmd
-DM_DFLAGS="-I/home/vnayar/d/include/d"
-DM_LDFLAGS="-L-L/home/vnayar/d/lib -L-lSDL_image -L-lDerelictSDL -L-lDerelictUtil -L-lDerelictGL -L-lGL -L-ldl"
+DM_DFLAGS="-I${HOME}/d/include"
+DM_LDFLAGS="-L-L${HOME}/d/lib -L-lSDL_image -L-lDerelictSDL -L-lDerelictUtil -L-lDerelictGL -L-lGL -L-ldl"
 BUILD_DIR="build"
 
 if ! test -e $BUILD_DIR ; then
