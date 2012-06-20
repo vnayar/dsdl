@@ -5,7 +5,6 @@ import derelict.sdl.image;
 import derelict.opengl.gl;
 import derelict.opengl.glu;
 import derelict.util.compat;
-import std.stdio;
 
 import constants, surface, event, entity, player;
 import area, camera, background, level;
@@ -19,12 +18,9 @@ class Game {
   private SDL_Surface* _surfTileset;
 
   private Player _player1;
-  private Entity _entity2;
 
   private SimpleGravityField _gravityField;
   private CollisionField _collisionField;
-
-  private Background _background;
 
   // Eventually store all level-specific data here.
   private Level _level;
@@ -63,15 +59,9 @@ class Game {
   public this() {
     _running = true;
     _eventDispatcher = this.new GameEventDispatcher();
-    _background = new Background();
     _player1 = new Player();
-    _entity2 = new Entity();
     _gravityField = new SimpleGravityField([0.0f, 3.0f]);
-    _gravityField.add(_player1);
-    _gravityField.add(_entity2);
     _collisionField = new CollisionField();
-    _collisionField.add(_player1);
-    _collisionField.add(_entity2);
 
 	_level = new Level();
   }
@@ -123,7 +113,7 @@ class Game {
 	ImageBank.load("./tileset", [".png"]);
 
     // Load our background image.
-    _background.onLoad("./gfx/Natural_Dam,_Ozark_National_Forest,_Arkansas.jpg");
+    //_background.onLoad("./gfx/Natural_Dam,_Ozark_National_Forest,_Arkansas.jpg");
 
     // Load graphics for our Yoshi.
     if (_player1.onLoad("./gfx/yoshi3.png", 32, 32, 8) == false) {
@@ -133,20 +123,14 @@ class Game {
     _player1.setCollisionBoundary(Rectangle([6, 0], [20, 32]));
     Entity.EntityList ~= _player1;
 
-    // A nemesis?  I don't like the look in his eye.
-    if (_entity2.onLoad("./gfx/yoshi3.png", 32, 32, 8) == false) {
-      return false;
-    }
-
-    _entity2.setLocation([300.0f, 20.0f]);
-    _entity2.setCollisionBoundary(Rectangle([6, 0], [20, 32]));
-    Entity.EntityList ~= _entity2;
-
     // Now load the landscape we we play on.
-    //if (Area.AreaControl.onLoad("./maps/Demo.area") == false) {
-    //  return false;
-    //}
     _level.loadFromXmlFile("./levels/level1.xml");
+
+    // Set up our fields.
+    foreach (entity; Entity.EntityList) {
+      _gravityField.add(entity);
+      _collisionField.add(entity);
+    }
 
     // Set bounds for how far the camera may move.
     Rectangle cameraBounds = Rectangle(
@@ -158,7 +142,7 @@ class Game {
     );
     Camera.CameraControl.setBounds(cameraBounds);
     // Let the background parallax with the camera.
-    _background.setParallaxBounds(cameraBounds);
+    _level.background.setParallaxBounds(cameraBounds);
     
     // Set the camera to track our Yoshi.
     Camera.CameraControl.setTarget(_player1);
@@ -179,7 +163,7 @@ class Game {
   public void onRender() {
     //writeln("onRender");
     // Draw the background below everything else.
-    _background.onRender(_surfDisplay);
+    _level.background.onRender(_surfDisplay);
 
     // Draw our tiled area.
     Area.AreaControl.onRender(_surfDisplay,

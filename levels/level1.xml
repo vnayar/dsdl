@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <level>
 
+  <!-- Background Configuration -->
+  <background>
+    <image>./gfx/Natural_Dam,_Ozark_National_Forest,_Arkansas.jpg</image>
+  </background>
+
   <!-- Camera Configuration -->
   <camera></camera>
 
@@ -65,6 +70,24 @@
 
   <!-- Entities that may be interacted with -->
   <entities>
+    <entity id="enemy1" config="yoshi">
+      <location>
+        <value>300.0</value>
+        <value>20.0</value>
+      </location>
+    </entity>
+    <entity id="enemy2" config="yoshi">
+      <location>
+        <value>340.0</value>
+        <value>20.0</value>
+      </location>
+    </entity>
+    <entity id="enemy3" config="yoshi">
+      <location>
+        <value>360.0</value>
+        <value>20.0</value>
+      </location>
+    </entity>
   </entities>
 
 </level>

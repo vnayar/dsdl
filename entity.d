@@ -2,12 +2,18 @@ module entity;
 
 import std.stdio;
 import std.xml;
+import std.conv;
+
 import derelict.sdl.sdl;
 
 import surface, animation, area, camera, fps;
 import entityconfig;
 import physics.types;
 import resource.image;
+
+debug {
+  import std.stdio;
+}
 
 
 /**
@@ -41,6 +47,9 @@ class Entity : /*implements*/ Collidable {
   bool _moveLeft;
   bool _moveRight;
 
+  // Store the name of the EntityConfig default settings.
+  protected string _entityConfig;
+
   protected DVect _location;
   protected DVect _velocity;
   protected DVect _maxVelocity;
@@ -72,6 +81,10 @@ class Entity : /*implements*/ Collidable {
 
     _currentFrameCol = 0;
     _currentFrameRow = 0;
+  }
+
+  string getEntityConfig() {
+    return _entityConfig;
   }
 
   // Locatable Interface
@@ -212,14 +225,40 @@ class Entity : /*implements*/ Collidable {
   }
 
 
+  // FIXME: Find a logical place for this.
+  static void delegate(ElementParser) getDVectParser(ref DVect vect) {
+    debug writeln("getDVectParser");
+    return (ElementParser parser) {
+      debug writeln("DVect parser");
+      int index = 0;
+      parser.onEndTag["value"] = (in Element e) {
+        debug writeln("Writing to index ", index);
+        vect[index++] = to!float(e.text());
+      };
+      parser.parse();
+      debug writeln("vect = ", vect);
+    };
+  }
 
   /**
    * Parser logic to read from XML file.
    * 
    */
-  //static void delegate (ElementParser) getXmlParser(Entity entity) {
-  //}
+  static void delegate (ElementParser) getXmlParser(out Entity[] entities) {
+    debug writeln("Entering Entity.getXmlParser");
+    return (ElementParser parser) {
+      debug writeln("Entity parser");
+      Entity entity = new Entity();
+      
+      entity._entityConfig = parser.tag.attr["config"];
+      
+      parser.onStartTag["location"] = getDVectParser(entity._location);
 
+      parser.parse();
+
+      entities ~= entity;
+    };
+  }
 }
 
 
@@ -231,4 +270,32 @@ class EntityCol {
 
   this() {
   }
+}
+
+
+unittest {
+  string entityXml = q"EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Entities that may be interacted with -->
+<entities>
+  <entity config="yoshi">
+    <location>
+      <value>20.0</value>
+      <value>20.0</value>
+    </location>
+  </entity>
+</entities>
+EOF";
+
+  Entity[] entities;
+  auto xml = new DocumentParser(entityXml);
+  xml.onStartTag["entity"] = Entity.getXmlParser(entities);
+
+  debug writeln("Parsing entities");
+  xml.parse();
+
+  Entity entity = entities[0];
+
+  assert(entity.getLocation() == [20.0f, 20.0f],
+         "location " ~ to!string(entity.getLocation()));
 }

@@ -1,5 +1,6 @@
 module background;
 
+import std.xml;
 import derelict.sdl.sdl;
 
 import surface, camera, constants;
@@ -17,8 +18,8 @@ class Background {
   private bool _hasParallaxBounds;
   private Rectangle _parallaxBounds;
 
-  public void onLoad(in string file) {
-    _sdlSurface = ImageBank.IMAGES[file];
+  public void onLoad(in string image) {
+    _sdlSurface = ImageBank.IMAGES[image];
   }
 
   public void onRender(SDL_Surface* surfDisplay) {
@@ -63,5 +64,19 @@ class Background {
     offset[1] = cast(int)(offsetMax[1] * parallax[1]);
 
     return offset;
+  }
+
+  static void delegate (ElementParser) getXmlParser(out Background background) {
+    return (ElementParser parser) {
+      string image;
+      background = new Background();
+      
+      parser.onEndTag["image"] = (in Element e) {
+        image = e.text();
+      };
+      parser.parse();
+
+      background.onLoad(image);
+    };
   }
 }

@@ -24,6 +24,7 @@ struct EntityConfig {
   int height;
   int maxFrames;
 
+  // FIXME: Find a logical place for this.
   static void delegate(ElementParser) getDVectParser(ref DVect vect) {
     debug writeln("getDVectParser");
     return (ElementParser parser) {
@@ -69,7 +70,6 @@ struct EntityConfig {
     };
   }
 }
-
 
 
 unittest {
