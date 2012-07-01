@@ -88,6 +88,25 @@
         <value>20.0</value>
       </location>
     </entity>
+    <entity id="enemy4" config="yoshi">
+      <location>
+        <value>380.0</value>
+        <value>20.0</value>
+      </location>
+    </entity>
+    <entity id="enemy5" config="yoshi">
+      <location>
+        <value>400.0</value>
+        <value>20.0</value>
+      </location>
+    </entity>
+    <entity id="enemy6" config="yoshi">
+      <location>
+        <value>420.0</value>
+        <value>20.0</value>
+      </location>
+    </entity>
+
   </entities>
 
 </level>

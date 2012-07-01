@@ -125,7 +125,7 @@ class CollisionField : Field {
       collidePhysics(collision[0], collision[1]);
 
       collision[0].onCollision(collision[1]);
-      collision[1].onCollision(collision[0]);
+      //collision[1].onCollision(collision[0]);
     }
   }
 
@@ -149,24 +149,37 @@ class CollisionField : Field {
    * Re-position entities to avoid overlap after a collision.
    */
   void correctLocation(Collidable entity1, Collidable entity2) {
+    Rectangle boundary1 = entity1.getCollisionBoundary();
+    Rectangle boundary2 = entity2.getCollisionBoundary();
+
+    if (!boundary1.isIntersect(boundary2)) return;
+
     // Move entity1 back from where it came until there is no collision.
     DVect velocity = entity1.getVelocity();
 
     // Make sure we move no more than 1 pixel at a time in any direction.
-    float maxScale = float.min;
-    foreach (v; velocity) {
-      maxScale = abs(v) > maxScale ? abs(v) : maxScale;
+    float maxScale = getMaxScale(velocity);
+    if (maxScale == 0.0f) {
+      // FIXME:  Pick a default direction if the object is not moving.
+      velocity = [1.0f, 0.0f];
+      return;
     }
-    DVect backMove = -entity1.getVelocity()[] / maxScale;
+    DVect backMove = -velocity[] / maxScale;
 
     // Back that assumption up.
-    Rectangle boundary1 = entity1.getCollisionBoundary();
-    Rectangle boundary2 = entity2.getCollisionBoundary();
     DVect loc1 = entity1.getLocation();
     while (boundary1.isIntersect(boundary2)) {
       loc1[] += backMove[];
       boundary1.location[] += backMove[];
     }
     entity1.setLocation(loc1);
+  }
+
+  float getMaxScale(DVect vect) {
+    float maxScale = 0.0f;
+    foreach (v; vect) {
+      maxScale = abs(v) > maxScale ? abs(v) : maxScale;
+    }
+    return maxScale;
   }
 }
