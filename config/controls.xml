@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<controls>
+  <control id="player1">
+    <!-- SDLK_ESCAPE -->
+    <quit>27</quit>
+    <!-- SDLK_UP -->
+    <jump>273</jump>
+    <!-- SDLK_LEFT -->
+    <moveLeft>276</moveLeft>
+    <!-- SDLK_RIGHT -->
+    <moveRight>275</moveRight>
+  </control>
+</controls>

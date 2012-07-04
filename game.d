@@ -1,5 +1,8 @@
 module game;
 
+import std.xml;
+import std.conv;
+
 import derelict.sdl.sdl;
 import derelict.sdl.image;
 import derelict.opengl.gl;
@@ -11,13 +14,16 @@ import area, camera, background, level;
 import physics.types, physics.collision, physics.gravity;
 import resource.image;
 
+debug import std.stdio;
+
 class Game {
   private bool _running;
 
   private SDL_Surface* _surfDisplay;
   private SDL_Surface* _surfTileset;
 
-  private Player _player1;
+  //private Player _player1;
+  private Player[string] _players;
 
   private SimpleGravityField _gravityField;
   private CollisionField _collisionField;
@@ -27,28 +33,69 @@ class Game {
 
   // Our inner-class defines how we handle events.
   private class GameEventDispatcher : EventDispatcher {
+    private void delegate()[int] _scanCodeDownHandlers;
+    private void delegate()[int] _scanCodeUpHandlers;
+
+    public void onLoad(string fileName)
+      in {
+        debug writeln("_players.length = ", _players.length);
+        assert(_players.length > 0, "Call loadPlayersFromXML() before loading controls.");
+      }
+    body {
+      string xmlData = cast(string) std.file.read(fileName);
+      auto xml = new DocumentParser(xmlData);
+      xml.onStartTag["control"] = (ElementParser parser) {
+        string id = parser.tag.attr["id"];
+        if (id !in _players)
+          throw new Exception("Cannot find player '" ~ id ~ "'.");
+        Player player = _players[id];
+
+        parser.onEndTag["quit"] = (in Element e) {
+          _scanCodeDownHandlers[to!int(e.text())] = delegate() {
+            _running = false;
+          };
+        };
+        parser.onEndTag["jump"] = (in Element e) {
+          _scanCodeDownHandlers[to!int(e.text())] = delegate() {
+            player.jump();
+          };
+        };
+        parser.onEndTag["moveLeft"] = (in Element e) {
+          _scanCodeDownHandlers[to!int(e.text())] = delegate() {
+            player.setMoveLeft(true);
+          };
+          _scanCodeUpHandlers[to!int(e.text())] = delegate() {
+            player.setMoveLeft(false);
+          };
+        };
+        parser.onEndTag["moveRight"] = (in Element e) {
+          _scanCodeDownHandlers[to!int(e.text())] = delegate() {
+            player.setMoveRight(true);
+          };
+          _scanCodeUpHandlers[to!int(e.text())] = delegate() {
+            player.setMoveRight(false);
+          };
+        };
+        parser.parse();
+      };
+      xml.parse();
+    }
+    
     public:
       override void onExit() {
         this.outer._running = false;
       }
 
       override void onKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode) {
-        switch (sym) {
-          case SDLK_ESCAPE: _running = false; break;
-          case SDLK_UP:     _player1.jump(); break;
-          case SDLK_LEFT:   _player1.setMoveLeft(true); break;
-          case SDLK_RIGHT:  _player1.setMoveRight(true); break;
-          default:          break;
-        }
+        if (sym in _scanCodeDownHandlers)
+          _scanCodeDownHandlers[sym]();
       }
 
       override void onKeyUp(SDLKey sym, SDLMod mod, Uint16 unicode) {
-        switch (sym) {
-          case SDLK_LEFT:  _player1.setMoveLeft(false); break;
-          case SDLK_RIGHT: _player1.setMoveRight(false); break;
-          default: break;
-        }
+        if (sym in _scanCodeUpHandlers)
+          _scanCodeUpHandlers[sym]();
       }
+
   }
 
   // Allow multiple subtyping by creating an alias for this.
@@ -59,7 +106,6 @@ class Game {
   public this() {
     _running = true;
     _eventDispatcher = this.new GameEventDispatcher();
-    _player1 = new Player();
     _gravityField = new SimpleGravityField([0.0f, 3.0f]);
     _collisionField = new CollisionField();
 
@@ -89,39 +135,25 @@ class Game {
 
   public bool onInit() {
     //writeln("onInit()");
-    DerelictSDL.load();
-    DerelictSDLImage.load();
-    DerelictGL.load();
-    DerelictGLU.load();
+    initSDL();
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    {
-      throw new Exception("Couldn't init SDL: " ~ toDString(SDL_GetError()));
-    }
+    initImageBank();
 
-    SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    loadPlayersFromXmlFile("./config/players.xml");
 
-    if ((_surfDisplay =
-          SDL_SetVideoMode(WWIDTH, WHEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF)) == null)
-    {
-      throw new Exception("Failed to set video mode: " ~ toDString(SDL_GetError()));
-    }
+    _eventDispatcher.onLoad("./config/controls.xml");
 
-	ImageBank.load("./gfx", [".png", ".jpg"]);
-	ImageBank.load("./tileset", [".png"]);
-
+    debug writeln("Players: ", _players);
     // Load our background image.
     //_background.onLoad("./gfx/Natural_Dam,_Ozark_National_Forest,_Arkansas.jpg");
 
     // Load graphics for our Yoshi.
-    if (_player1.onLoad("./gfx/yoshi3.png", 32, 32, 8) == false) {
-      return false;
-    }
-    _player1.setLocation([20.0f, 20.0f]);
-    _player1.setCollisionBoundary(Rectangle([6, 0], [20, 32]));
-    Entity.EntityList ~= _player1;
+    //if (_player1.onLoad("./gfx/yoshi3.png", 32, 32, 8) == false) {
+    //  return false;
+    //}
+    //_player1.setLocation([20.0f, 20.0f]);
+    //_player1.setCollisionBoundary(Rectangle([6, 0], [20, 32]));
+    //Entity.EntityList ~= _player1;
 
     // Now load the landscape we we play on.
     _level.loadFromXmlFile("./levels/level1.xml");
@@ -145,10 +177,48 @@ class Game {
     _level.background.setParallaxBounds(cameraBounds);
     
     // Set the camera to track our Yoshi.
-    Camera.CameraControl.setTarget(_player1);
+    Camera.CameraControl.setTarget(_players["player1"]);
 
 
     return true;
+  }
+
+  private void initSDL() {
+    DerelictSDL.load();
+    DerelictSDLImage.load();
+    DerelictGL.load();
+    DerelictGLU.load();
+
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    {
+      throw new Exception("Couldn't init SDL: " ~ toDString(SDL_GetError()));
+    }
+
+    SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+    if ((_surfDisplay =
+          SDL_SetVideoMode(WWIDTH, WHEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF)) == null)
+    {
+      throw new Exception("Failed to set video mode: " ~ toDString(SDL_GetError()));
+    }
+  }
+
+  private void initImageBank() {
+	ImageBank.load("./gfx", [".png", ".jpg"]);
+	ImageBank.load("./tileset", [".png"]);
+  }
+
+  private void loadPlayersFromXmlFile(string fileName) {
+    string xmlData = cast(string) std.file.read(fileName);
+    auto xml = new DocumentParser(xmlData);
+    xml.onStartTag["player"] = Player.getXmlParser(_players);
+    xml.parse();
+
+    foreach (player; _players) {
+      Entity.EntityList ~= player;
+    }
   }
 
   public void onLoop() {
