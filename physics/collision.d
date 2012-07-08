@@ -92,6 +92,7 @@ class CollisionField : Field {
   }
 
   void onLoop() {
+    // Perform actual movement and check for tile collision.
     foreach (entity; _entities) {
       // Our copy of speed so we know how far to go.
       DVect move = entity.getVelocity()[] * Fps.FpsControl.getSpeedFactor();
@@ -101,7 +102,7 @@ class CollisionField : Field {
     // We detect collisions before calling 'onCollision' to prevent
     // an entity from reacting in a way that invalidates later detection.
     // e.g. Bullet his Mario and explodes before Mario detects collision.
-    Collidable[2][] collisions;
+    Collision[] collisions;
     foreach (entity1; _entities) {
       // FIXME: Add entity data structure that makes it clear who may collide.
       //   e.g. Divide the area into sections, and assign entities to their
@@ -114,65 +115,67 @@ class CollisionField : Field {
 
         Rectangle boundary2 = entity2.getCollisionBoundary();
         if (boundary1.isIntersect(boundary2)) {
-          collisions ~= [entity1, entity2];
+          Collision collision = new Collision();
+          collision.collidable1 = entity1;
+          collision.collidable2 = entity2;
+          collision.velocity1 = entity1.getVelocity();
+          collision.velocity2 = entity2.getVelocity();
+          collisions ~= collision;
         }
-        correctLocation(entity1, entity2);
       }
     }
 
     // Our 'correctLocation' logic means only 1 collision per pair.
     foreach (collision; collisions) {
-      collidePhysics(collision[0], collision[1]);
+      correctLocation(collision);
+      collidePhysics(collision);
 
-      collision[0].onCollision(collision[1]);
-      //collision[1].onCollision(collision[0]);
+      collision.collidable1.onCollision(collision.collidable2);
+      collision.collidable2.onCollision(collision.collidable1);
     }
   }
 
   /**
    * Perform impulse and velocity updates.
    */
-  void collidePhysics(Collidable entity1, Collidable entity2) {
-    DVect velocity1 = entity1.getVelocity();
-    DVect velocity2 = entity1.getVelocity();
-    DVect transfer = [0.3f, 0.3f];
+  void collidePhysics(Collision collision) {
+    DVect velocity1 = collision.velocity1;
+    DVect velocity2 = collision.velocity2;
+    DVect transfer = [1.5f, 1.5f];
     DVect relativeVelocity = velocity2[] - velocity1[];
-    velocity1[] += transfer[] * relativeVelocity[] *
-      Fps.FpsControl.getSpeedFactor();
-    velocity2[] -= transfer[] * relativeVelocity[] *
-      Fps.FpsControl.getSpeedFactor();
-    entity1.setVelocity(velocity1);
-    entity2.setVelocity(velocity2);
+
+    velocity1[] += transfer[] * relativeVelocity[];
+    collision.collidable1.setVelocity(velocity1);
   }
 
   /**
    * Re-position entities to avoid overlap after a collision.
    */
-  void correctLocation(Collidable entity1, Collidable entity2) {
-    Rectangle boundary1 = entity1.getCollisionBoundary();
-    Rectangle boundary2 = entity2.getCollisionBoundary();
+  void correctLocation(Collision collision) {
+    Rectangle boundary1 = collision.collidable1.getCollisionBoundary();
+    Rectangle boundary2 = collision.collidable2.getCollisionBoundary();
 
     if (!boundary1.isIntersect(boundary2)) return;
 
     // Move entity1 back from where it came until there is no collision.
-    DVect velocity = entity1.getVelocity();
+    DVect relativeVelocity = collision.velocity2[] - collision.velocity1[];
 
     // Make sure we move no more than 1 pixel at a time in any direction.
-    float maxScale = getMaxScale(velocity);
+    float maxScale = getMaxScale(relativeVelocity);
     if (maxScale == 0.0f) {
       // FIXME:  Pick a default direction if the object is not moving.
-      velocity = [1.0f, 0.0f];
+      relativeVelocity = [1.0f, 0.0f];
       return;
     }
-    DVect backMove = -velocity[] / maxScale;
+    DVect backMove = relativeVelocity[] / maxScale;
 
     // Back that assumption up.
-    DVect loc1 = entity1.getLocation();
+    DVect loc1 = collision.collidable1.getLocation();
     while (boundary1.isIntersect(boundary2)) {
       loc1[] += backMove[];
       boundary1.location[] += backMove[];
     }
-    entity1.setLocation(loc1);
+    collision.collidable1.setLocation(loc1);
   }
 
   float getMaxScale(DVect vect) {
@@ -182,4 +185,9 @@ class CollisionField : Field {
     }
     return maxScale;
   }
+}
+
+class Collision {
+  Collidable collidable1, collidable2;
+  DVect velocity1, velocity2;
 }
