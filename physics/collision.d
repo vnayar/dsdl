@@ -172,8 +172,12 @@ class CollisionField : Field {
     // Back that assumption up.
     DVect loc1 = collision.collidable1.getLocation();
     while (boundary1.isIntersect(boundary2)) {
-      loc1[] += backMove[];
       boundary1.location[] += backMove[];
+
+      // Stop if we are going to put the entity inside a tile.
+      if (!isLocationValidTile(boundary1)) break;
+
+      loc1[] += backMove[];
     }
     collision.collidable1.setLocation(loc1);
   }
