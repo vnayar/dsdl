@@ -14,7 +14,7 @@ import area, entityconfig, entity, background;
 class Level {
   Background background;
   EntityConfig[string] entityConfigs;
-  Entity[] entities;
+  Entity[string] entities;
 
   this() {
   }
@@ -35,7 +35,7 @@ class Level {
 
     foreach (entity; entities) {
       EntityConfig entityConfig = entityConfigs[entity.getEntityConfig()];
-      entity.onLoad(entityConfig);
+      entity.load(entityConfig);
       Entity.EntityList ~= entity;
     }
 

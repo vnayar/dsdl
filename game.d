@@ -9,7 +9,7 @@ import derelict.opengl.gl;
 import derelict.opengl.glu;
 import derelict.util.compat;
 
-import constants, surface, event, entity, player;
+import constants, surface, event, entityconfig, entity, player;
 import area, camera, background, level;
 import physics.types, physics.collision, physics.gravity;
 import resource.image;
@@ -213,10 +213,15 @@ class Game {
   private void loadPlayersFromXmlFile(string fileName) {
     string xmlData = cast(string) std.file.read(fileName);
     auto xml = new DocumentParser(xmlData);
+    EntityConfig[string] entityConfigs;
+
+    xml.onStartTag["entityConfig"] = EntityConfig.getXmlParser(entityConfigs);
     xml.onStartTag["player"] = Player.getXmlParser(_players);
     xml.parse();
 
     foreach (player; _players) {
+      EntityConfig entityConfig = entityConfigs[player.getEntityConfig()];
+      player.load(entityConfig);
       Entity.EntityList ~= player;
     }
   }
@@ -226,7 +231,7 @@ class Game {
     _collisionField.onLoop();
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
-      entity.onLoop();
+      entity.loop();
     }
   }
 
@@ -236,14 +241,14 @@ class Game {
     _level.background.onRender(_surfDisplay);
 
     // Draw our tiled area.
-    Area.AreaControl.onRender(_surfDisplay,
+    Area.AreaControl.render(_surfDisplay,
         Camera.CameraControl.getX(),
         Camera.CameraControl.getY());
 
     // Draw players and enemies.
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
-      entity.onRender(_surfDisplay);
+      entity.render(_surfDisplay);
     }
 
     // Swap the screen with our surface (prevents flickering while drawing)
@@ -257,11 +262,11 @@ class Game {
     SDL_FreeSurface(_surfDisplay);
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
-      entity.onCleanup();
+      entity.cleanup();
     }
     Entity.EntityList = new Entity[0];
 
-    Area.AreaControl.onCleanup();
+    Area.AreaControl.cleanup();
 
     if(SDL_Quit !is null)
       SDL_Quit();

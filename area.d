@@ -26,7 +26,7 @@ class Area {
    * ...
    * file[size][1] file[size][2] ... file[size][size]
    */
-  bool onLoad(string fileName) {
+  bool load(string fileName) {
     _mapList.length = 0;
     
     auto f = File(fileName, "r");
@@ -54,7 +54,7 @@ class Area {
     return true;
   }
 
-  void onRender(SDL_Surface* surfDisplay, int cameraX, int cameraY) {
+  void render(SDL_Surface* surfDisplay, int cameraX, int cameraY) {
     int mapWidth = MAP_WIDTH * TILE_SIZE;
     int mapHeight = MAP_HEIGHT * TILE_SIZE;
 
@@ -72,7 +72,7 @@ class Area {
     }
   }
 
-  void onCleanup() {
+  void cleanup() {
     _mapList.length = 0;
   }
 

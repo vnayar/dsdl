@@ -6,8 +6,8 @@ import std.conv;
 
 import derelict.sdl.sdl;
 
-import surface, animation, area, camera, fps;
-import entityconfig;
+import surface, sprite, area, camera, fps;
+import sprite, entityconfig;
 import physics.types;
 import resource.image;
 
@@ -32,15 +32,8 @@ class Entity : /*implements*/ Collidable {
     MAPONLY = 0x00000004
   };
 
-  protected Animation _animControl;
-  protected SDL_Surface* _surfEntity;
-
-  // The size of our image cell.
-  protected int _width;
-  protected int _height;
-
-  int _currentFrameCol;
-  int _currentFrameRow;
+  // Image and animation.
+  private Sprite _sprite;
 
   // Flags letting us know which way the player intends to move.
   // e.g. I 'intend' to go right, but the wind is blowing me left.
@@ -72,19 +65,19 @@ class Entity : /*implements*/ Collidable {
   }
 
   this() {
-    _animControl = new Animation();
     _location = [0.0f, 0.0f];
     _velocity = [0.0f, 0.0f];
     _maxVelocity = [10.0f, 15.0f];
     _moveAccel = [1.0f, 1.5f];
     _jumpVelocity = [0.0f, -16.0f];
-
-    _currentFrameCol = 0;
-    _currentFrameRow = 0;
   }
 
   string getEntityConfig() {
     return _entityConfig;
+  }
+
+  void setEntityConfig(string id) {
+    _entityConfig = id;
   }
 
   // Locatable Interface
@@ -138,33 +131,22 @@ class Entity : /*implements*/ Collidable {
     _moveRight = move;
   }
 
-  bool onLoad(string file, int width, int height, int maxFrames) {
-    _surfEntity = ImageBank.IMAGES[file];
-
-    Surface.setTransparent(_surfEntity, 255, 0, 255);
-
-    _width = width;
-    _height = height;
-
-    // FIXME: Get good values, not the entire image.
-    _collisionBoundary.location = [0.0f, 0.0f];
-    _collisionBoundary.width = [width, height];
-
-    _animControl.setMaxFrames(maxFrames);
-    return true;
-  }
-
   // Allow alternate initialization from a configuration template.
-  bool onLoad(EntityConfig entityConfig) {
-    onLoad(entityConfig.image, entityConfig.width, entityConfig.height, entityConfig.maxFrames);
+  bool load(EntityConfig entityConfig) {
     _maxVelocity = entityConfig.maxVelocity;
     _moveAccel = entityConfig.moveAccel;
     _jumpVelocity = entityConfig.jumpVelocity;
     _collisionBoundary = entityConfig.collisionBoundary;
+
+    _sprite = entityConfig.sprite.dup;
+    _sprite.load();
+    // TODO:  Find a better way to set the default animation.
+    _sprite.setAnimation("right");
+
     return true;
   }
 
-  void onLoop() {
+  void loop() {
     if (!_moveLeft && !_moveRight)
       stopMove();
     if (_moveLeft)
@@ -179,36 +161,26 @@ class Entity : /*implements*/ Collidable {
         _velocity[i] = _maxVelocity[i];
     }
 
-    onAnimate();
+    animate();
   }
 
-  void onRender(SDL_Surface* surfDisplay) {
-    if (_surfEntity == null || surfDisplay == null) return;
-
-    Surface.onDraw(_surfEntity, 
-        _currentFrameCol * _width, _animControl.getCurrentFrame() * _height,
-        _width, _height,
-        surfDisplay,
+  void render(SDL_Surface* surfDisplay) {
+    _sprite.render(surfDisplay, 
         cast(int)_location[0] - Camera.CameraControl.getX(),
         cast(int)_location[1] - Camera.CameraControl.getY());
   }
 
-  void onCleanup() {
-    _surfEntity = null;
+  void cleanup() {
   }
 
-  void onAnimate() {
+  void animate() {
     if (_moveLeft) {
-      _currentFrameCol = 0;
+      _sprite.setAnimation("left");
     } else if (_moveRight) {
-      _currentFrameCol = 1;
+      _sprite.setAnimation("right");
     }
-    if (_velocity[0] == 0.0f) {
-      _animControl.setMaxFrames(0);
-    } else {
-      _animControl.setMaxFrames(8);
-    }
-    _animControl.onAnimate();
+    if (_velocity[0] != 0.0f)
+      _sprite.animate();
   }
 
   /**
@@ -242,13 +214,13 @@ class Entity : /*implements*/ Collidable {
 
   /**
    * Parser logic to read from XML file.
-   * 
    */
-  static void delegate (ElementParser) getXmlParser(out Entity[] entities) {
+  static void delegate (ElementParser) getXmlParser(out Entity[string] entities) {
     debug writeln("Entering Entity.getXmlParser");
     return (ElementParser parser) {
       debug writeln("Entity parser");
       Entity entity = new Entity();
+      string id = parser.tag.attr["id"];
       
       entity._entityConfig = parser.tag.attr["config"];
       
@@ -256,7 +228,7 @@ class Entity : /*implements*/ Collidable {
 
       parser.parse();
 
-      entities ~= entity;
+      entities[id] = entity;
     };
   }
 }

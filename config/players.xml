@@ -1,37 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <players>
-  <player id="player1">
-    <!-- Movement settings -->
-    <maxVelocity>
-      <value>10.0</value>
-      <value>15.0</value>
-    </maxVelocity>
-    <moveAccel>
-      <value>1.0</value>
-      <value>1.5</value>
-    </moveAccel>
-    <jumpVelocity>
-      <value>0.0</value>
-      <value>-16.0</value>
-    </jumpVelocity>
-    <!-- Sprite information -->
-    <sprite>
-      <image>./gfx/yoshi3.png</image>
-      <width>32</width>
-      <height>32</height>
-      <maxFrames>8</maxFrames>
-    </sprite>
-    <!-- The part of the image that may collide. -->
-    <collisionBoundary>
-      <location>
-        <value>6</value>
-        <value>0</value>
-      </location>
-      <width>
-        <value>20</value>
-        <value>32</value>
-      </width>
-    </collisionBoundary>
+  <!-- Sets of default settings individual entities may use. -->
+  <entityConfigs>
+	<entityConfig id="yoshi">
+	  <!-- Movement settings -->
+	  <maxVelocity>
+		<value>10.0</value>
+		<value>15.0</value>
+	  </maxVelocity>
+	  <moveAccel>
+		<value>1.0</value>
+		<value>1.5</value>
+	  </moveAccel>
+	  <jumpVelocity>
+		<value>0.0</value>
+		<value>-16.0</value>
+	  </jumpVelocity>
+	  <!-- Sprite information -->
+	  <sprite>
+		<image>./gfx/yoshi3.png</image>
+		<frameWidth>32</frameWidth>
+		<frameHeight>32</frameHeight>
+        <animations>
+          <animation id="left">
+            <frameInc>2</frameInc>
+            <frameStart>0</frameStart>
+            <frameEnd>14</frameEnd>
+          </animation>
+          <animation id="right">
+            <frameInc>2</frameInc>
+            <frameStart>1</frameStart>
+            <frameEnd>15</frameEnd>
+          </animation>
+        </animations>
+	  </sprite>
+	  <!-- The part of the image that may collide. -->
+	  <collisionBoundary>
+		<location>
+		  <value>6</value>
+		  <value>0</value>
+		</location>
+		<width>
+		  <value>20</value>
+		  <value>32</value>
+		</width>
+	  </collisionBoundary>
+	</entityConfig>
+  </entityConfigs>
+
+  <player id="player1" config="yoshi">
     <!-- Initial location of the player. -->
     <location>
       <value>20.0</value>

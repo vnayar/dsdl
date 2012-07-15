@@ -1,6 +1,7 @@
 import std.xml;
 import std.conv;
 
+import sprite;
 import physics.types;
 
 debug {
@@ -11,7 +12,7 @@ debug {
 /**
  * A collection of settings that can be applied to many entities.
  */
-struct EntityConfig {
+class EntityConfig {
   DVect maxVelocity;
   DVect moveAccel;
   DVect jumpVelocity;
@@ -19,10 +20,7 @@ struct EntityConfig {
   Rectangle collisionBoundary;
 
   // Sprite configuration
-  string image;
-  int width;
-  int height;
-  int maxFrames;
+  Sprite sprite;
 
   // FIXME: Find a logical place for this.
   static void delegate(ElementParser) getDVectParser(ref DVect vect) {
@@ -40,25 +38,19 @@ struct EntityConfig {
   }
 
   static void delegate(ElementParser) getXmlParser(out EntityConfig[string] entityConfigs) {
-    debug writeln("Enter EntityConfig.getEntityConfigXmlParser");
+    debug writeln("Entering EntityConfig.getXmlParser.");
     return (ElementParser parser) {
       debug writeln("EntityConfig parser");
 
-      EntityConfig entityConfig;
+      EntityConfig entityConfig = new EntityConfig();
       string id = parser.tag.attr["id"];
 
       parser.onStartTag["maxVelocity"] = getDVectParser(entityConfig.maxVelocity);
       parser.onStartTag["moveAccel"] = getDVectParser(entityConfig.moveAccel);
       parser.onStartTag["jumpVelocity"] = getDVectParser(entityConfig.jumpVelocity);
-      parser.onStartTag["sprite"] = (ElementParser parser) {
-        parser.onEndTag["image"] = (in Element e) { entityConfig.image = e.text(); };
-        parser.onEndTag["width"] = (in Element e) { entityConfig.width = to!int(e.text()); };
-        parser.onEndTag["height"] = (in Element e) { entityConfig.height = to!int(e.text()); };
-        parser.onEndTag["maxFrames"] = (in Element e) {
-          entityConfig.maxFrames = to!int(e.text());
-        };
-        parser.parse();
-      };
+
+      parser.onStartTag["sprite"] = Sprite.getXmlParser(entityConfig.sprite);
+
       parser.onStartTag["collisionBoundary"] = (ElementParser parser) {
         parser.onStartTag["location"] = getDVectParser(entityConfig.collisionBoundary.location);
         parser.onStartTag["width"] = getDVectParser(entityConfig.collisionBoundary.width);
@@ -93,9 +85,8 @@ unittest {
     <!-- Sprite information -->
     <sprite>
       <image>./gfx/yoshi3.png</image>
-      <width>32</width>
-      <height>32</height>
-      <maxFrames>8</maxFrames>
+      <frameWidth>32</frameWidth>
+      <frameHeight>32</frameHeight>
     </sprite>
     <!-- The part of the image that may collide. -->
     <collisionBoundary>
@@ -128,11 +119,9 @@ EOF";
   assert(entityConfig.jumpVelocity == [0.0f, -16.0f],
          "maxVelocity " ~ to!string(entityConfig.jumpVelocity));
 
-  assert(entityConfig.image == "./gfx/yoshi3.png");
-  assert(entityConfig.width == 32);
-  assert(entityConfig.height == 32);
-  assert(entityConfig.maxFrames == 8);
-  
+  assert(entityConfig.sprite.frameWidth == 32, "sprite.frameWidth = " ~
+         to!string(entityConfig.sprite.frameWidth) ~ ", expected 32.");
+
   assert(entityConfig.collisionBoundary.location == [6, 0]);
   assert(entityConfig.collisionBoundary.width == [20, 32]);
 }

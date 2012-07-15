@@ -50,9 +50,20 @@
 	  <!-- Sprite information -->
 	  <sprite>
 		<image>./gfx/yoshi3.png</image>
-		<width>32</width>
-		<height>32</height>
-		<maxFrames>8</maxFrames>
+		<frameWidth>32</frameWidth>
+		<frameHeight>32</frameHeight>
+        <animations>
+          <animation id="left">
+            <frameInc>2</frameInc>
+            <frameStart>0</frameStart>
+            <frameEnd>14</frameEnd>
+          </animation>
+          <animation id="right">
+            <frameInc>2</frameInc>
+            <frameStart>1</frameStart>
+            <frameEnd>15</frameEnd>
+          </animation>
+        </animations>
 	  </sprite>
 	  <!-- The part of the image that may collide. -->
 	  <collisionBoundary>
