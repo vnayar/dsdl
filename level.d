@@ -14,7 +14,7 @@ import area, entityconfig, entity, background;
 class Level {
   Background background;
   EntityConfig[string] entityConfigs;
-  Entity[string] entities;
+  Entity[] entities;
 
   this() {
   }
@@ -36,6 +36,10 @@ class Level {
     foreach (entity; entities) {
       EntityConfig entityConfig = entityConfigs[entity.getEntityConfig()];
       entity.load(entityConfig);
+
+      // TODO:  Find a better way to set the default animation.
+      entity.getSprite().setAnimation("right");
+
       Entity.EntityList ~= entity;
     }
 

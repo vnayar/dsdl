@@ -39,14 +39,6 @@
 		<value>10.0</value>
 		<value>15.0</value>
 	  </maxVelocity>
-	  <moveAccel>
-		<value>1.0</value>
-		<value>1.5</value>
-	  </moveAccel>
-	  <jumpVelocity>
-		<value>0.0</value>
-		<value>-16.0</value>
-	  </jumpVelocity>
 	  <!-- Sprite information -->
 	  <sprite>
 		<image>./gfx/yoshi3.png</image>

@@ -46,6 +46,42 @@
 		</width>
 	  </collisionBoundary>
 	</entityConfig>
+	<entityConfig id="balloon">
+	  <!-- Movement settings -->
+	  <maxVelocity>
+		<value>10.0</value>
+		<value>15.0</value>
+	  </maxVelocity>
+	  <!-- Sprite information -->
+	  <sprite>
+		<image>./gfx/balloon.png</image>
+		<frameWidth>32</frameWidth>
+		<frameHeight>32</frameHeight>
+        <animations>
+          <animation id="spin">
+            <frameInc>2</frameInc>
+            <frameStart>0</frameStart>
+            <frameEnd>14</frameEnd>
+          </animation>
+          <animation id="explode">
+            <frameInc>2</frameInc>
+            <frameStart>1</frameStart>
+            <frameEnd>15</frameEnd>
+          </animation>
+        </animations>
+	  </sprite>
+	  <!-- The part of the image that may collide. -->
+	  <collisionBoundary>
+		<location>
+		  <value>7</value>
+		  <value>7</value>
+		</location>
+		<width>
+		  <value>17</value>
+		  <value>17</value>
+		</width>
+	  </collisionBoundary>
+	</entityConfig>
   </entityConfigs>
 
   <player id="player1" config="yoshi">

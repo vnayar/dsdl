@@ -40,6 +40,7 @@ interface Movable : Locatable {
 
 // Objects that can collide define their boundaries.
 interface Collidable : Movable {
+  bool isCollidable();
   Rectangle getCollisionBoundary();
   void onCollision(Collidable entity);
 }

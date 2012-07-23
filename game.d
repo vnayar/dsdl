@@ -9,7 +9,7 @@ import derelict.opengl.gl;
 import derelict.opengl.glu;
 import derelict.util.compat;
 
-import constants, surface, event, entityconfig, entity, player;
+import constants, surface, event, entityconfig, entity, player, projectile;
 import area, camera, background, level;
 import physics.types, physics.collision, physics.gravity;
 import resource.image;
@@ -74,6 +74,11 @@ class Game {
           };
           _scanCodeUpHandlers[to!int(e.text())] = delegate() {
             player.setMoveRight(false);
+          };
+        };
+        parser.onEndTag["shootProjectile"] = (in Element e) {
+          _scanCodeDownHandlers[to!int(e.text())] = delegate() {
+            player.shootProjectile();
           };
         };
         parser.parse();
@@ -222,8 +227,22 @@ class Game {
     foreach (player; _players) {
       EntityConfig entityConfig = entityConfigs[player.getEntityConfig()];
       player.load(entityConfig);
+      player.getSprite().setAnimation("right");
       Entity.EntityList ~= player;
+
+      // Create balloons for the player to throw.
+      Entity[] projectiles;
+      foreach (i; 0 .. 3) {
+        Projectile projectile = new Projectile();
+        projectile.load(entityConfigs["balloon"]);
+        projectile.getSprite().setAnimation("spin");
+        projectile.setIsCollidable(false);
+        projectiles ~= projectile;
+        Entity.EntityList ~= projectile;
+      }
+      player.setProjectiles(projectiles);
     }
+
   }
 
   public void onLoop() {

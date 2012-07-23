@@ -9,5 +9,7 @@
     <moveLeft>276</moveLeft>
     <!-- SDLK_RIGHT -->
     <moveRight>275</moveRight>
+    <!-- SDLK_SPACE -->
+    <shootProjectile>32</shootProjectile>
   </control>
 </controls>

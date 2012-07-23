@@ -14,8 +14,6 @@ debug {
  */
 class EntityConfig {
   DVect maxVelocity;
-  DVect moveAccel;
-  DVect jumpVelocity;
 
   Rectangle collisionBoundary;
 
@@ -45,9 +43,9 @@ class EntityConfig {
       EntityConfig entityConfig = new EntityConfig();
       string id = parser.tag.attr["id"];
 
+      debug writeln("Adding EntityConfig '" ~ id ~ "'.");
+
       parser.onStartTag["maxVelocity"] = getDVectParser(entityConfig.maxVelocity);
-      parser.onStartTag["moveAccel"] = getDVectParser(entityConfig.moveAccel);
-      parser.onStartTag["jumpVelocity"] = getDVectParser(entityConfig.jumpVelocity);
 
       parser.onStartTag["sprite"] = Sprite.getXmlParser(entityConfig.sprite);
 
@@ -74,14 +72,6 @@ unittest {
       <value>10.0</value>
       <value>15.0</value>
     </maxVelocity>
-    <moveAccel>
-      <value>1.0</value>
-      <value>1.5</value>
-    </moveAccel>
-    <jumpVelocity>
-      <value>0.0</value>
-      <value>-16.0</value>
-    </jumpVelocity>
     <!-- Sprite information -->
     <sprite>
       <image>./gfx/yoshi3.png</image>
@@ -114,10 +104,6 @@ EOF";
 
   assert(entityConfig.maxVelocity == [10.0f, 15.0f],
          "maxVelocity " ~ to!string(entityConfig.maxVelocity));
-  assert(entityConfig.moveAccel == [1.0f, 1.5f],
-         "maxAccel " ~ to!string(entityConfig.moveAccel));
-  assert(entityConfig.jumpVelocity == [0.0f, -16.0f],
-         "maxVelocity " ~ to!string(entityConfig.jumpVelocity));
 
   assert(entityConfig.sprite.frameWidth == 32, "sprite.frameWidth = " ~
          to!string(entityConfig.sprite.frameWidth) ~ ", expected 32.");
