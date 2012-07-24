@@ -17,6 +17,8 @@ private:
   int _frameEnd     = 0;
   bool _oscillate   = false;
 
+  bool _isComplete  = false;  // Indicates if all frames have been animated.
+
 public:
 
   @property
@@ -49,11 +51,16 @@ public:
       _frameInc = -_frameInc;
     } else if (_frameCurrent > _frameEnd) {
       _frameCurrent = _frameStart;
+      _isComplete = true;
     }
   }
 
   void setOscillate(bool oscillate) {
     _oscillate = oscillate;
+  }
+
+  int getFrameStart() {
+    return _frameStart;
   }
 
   void setFrameStart(int frameStart) {
@@ -76,6 +83,14 @@ public:
     }
   body {
     _frameCurrent = frame;
+  }
+
+  bool isComplete() {
+    return _isComplete;
+  }
+
+  void setIsComplete(bool isComplete) {
+    _isComplete = isComplete;
   }
 
   int getFrameCurrent() {

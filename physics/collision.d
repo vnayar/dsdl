@@ -104,11 +104,15 @@ class CollisionField : Field {
     // e.g. Bullet his Mario and explodes before Mario detects collision.
     Collision[] collisions;
     foreach (entity1; _entities) {
+      if (entity1.isCollidable() == false)
+        continue;
       // FIXME: Add entity data structure that makes it clear who may collide.
       //   e.g. Divide the area into sections, and assign entities to their
       //        sections, and only check collisions within a section.
       Rectangle boundary1 = entity1.getCollisionBoundary();
       foreach (entity2; _entities) {
+        if (entity2.isCollidable() == false)
+          continue;
         // Avoid self-collision.
         if (entity1 is entity2)
           continue;

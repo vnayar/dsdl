@@ -231,7 +231,7 @@ class Game {
       Entity.EntityList ~= player;
 
       // Create balloons for the player to throw.
-      Entity[] projectiles;
+      Projectile[] projectiles;
       foreach (i; 0 .. 3) {
         Projectile projectile = new Projectile();
         projectile.load(entityConfigs["balloon"]);

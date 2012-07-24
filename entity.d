@@ -23,6 +23,7 @@ class Entity : /*implements*/ Collidable {
 
   // Image and animation.
   private Sprite _sprite;
+  private bool _isRenderable;
 
   // Store the name of the EntityConfig default settings.
   private string _entityConfig;
@@ -43,18 +44,27 @@ class Entity : /*implements*/ Collidable {
   }
 
   this() {
+    _isRenderable = true;
     _location = [0.0f, 0.0f];
     _velocity = [0.0f, 0.0f];
     _maxVelocity = [10.0f, 15.0f];
     _isCollidable = true;
   }
 
-  string getEntityConfig() {
-    return _entityConfig;
-  }
-
   Sprite getSprite() {
     return _sprite;
+  }
+  
+  bool isRenderable() {
+    return _isRenderable;
+  }
+
+  void setIsRenderable(bool isRenderable) {
+    _isRenderable = isRenderable;
+  }
+
+  string getEntityConfig() {
+    return _entityConfig;
   }
 
   void setEntityConfig(string id) {
@@ -132,9 +142,11 @@ class Entity : /*implements*/ Collidable {
   }
 
   void render(SDL_Surface* surfDisplay) {
-    _sprite.render(surfDisplay, 
-        cast(int)_location[0] - Camera.CameraControl.getX(),
-        cast(int)_location[1] - Camera.CameraControl.getY());
+    if (isRenderable()) {
+      _sprite.render(surfDisplay, 
+                     cast(int)_location[0] - Camera.CameraControl.getX(),
+                     cast(int)_location[1] - Camera.CameraControl.getY());
+    }
   }
 
   void cleanup() {

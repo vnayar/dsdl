@@ -66,14 +66,21 @@ class Sprite {
     }
   body {
     _animation = animations[id];
+    _animation.setIsComplete(false);
+    _animation.setFrameCurrent(_animation.getFrameStart());
   }
 
-  void animate()
+  /**
+   * Advance the animation.
+   * @return true when the animation has finished all frames.
+   */
+  bool animate()
     in {
       assert(_animation !is null, "Call setAnimation(string) first!");
     }
   body {
     _animation.animate();
+    return _animation.isComplete();
   }
 
   void render(SDL_Surface* surfDisplay, int x, int y)
