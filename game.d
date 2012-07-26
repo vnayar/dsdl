@@ -10,7 +10,7 @@ import derelict.opengl.glu;
 import derelict.util.compat;
 
 import constants, surface, event, entityconfig, entity, player, projectile;
-import area, camera, background, level;
+import area, camera, background, foreground, level;
 import physics.types, physics.collision, physics.gravity;
 import resource.image;
 
@@ -20,9 +20,7 @@ class Game {
   private bool _running;
 
   private SDL_Surface* _surfDisplay;
-  private SDL_Surface* _surfTileset;
 
-  //private Player _player1;
   private Player[string] _players;
 
   private SimpleGravityField _gravityField;
@@ -30,6 +28,9 @@ class Game {
 
   // Eventually store all level-specific data here.
   private Level _level;
+  private Foreground _foreground;
+
+  private int _waterLevel;
 
   // Our inner-class defines how we handle events.
   private class GameEventDispatcher : EventDispatcher {
@@ -115,6 +116,7 @@ class Game {
     _collisionField = new CollisionField();
 
 	_level = new Level();
+    _foreground = new Foreground();
   }
 
   public int onExecute() {
@@ -152,14 +154,6 @@ class Game {
     // Load our background image.
     //_background.onLoad("./gfx/Natural_Dam,_Ozark_National_Forest,_Arkansas.jpg");
 
-    // Load graphics for our Yoshi.
-    //if (_player1.onLoad("./gfx/yoshi3.png", 32, 32, 8) == false) {
-    //  return false;
-    //}
-    //_player1.setLocation([20.0f, 20.0f]);
-    //_player1.setCollisionBoundary(Rectangle([6, 0], [20, 32]));
-    //Entity.EntityList ~= _player1;
-
     // Now load the landscape we we play on.
     _level.loadFromXmlFile("./levels/level1.xml");
 
@@ -184,6 +178,10 @@ class Game {
     // Set the camera to track our Yoshi.
     Camera.CameraControl.setTarget(_players["player1"]);
 
+    _waterLevel = Area.AreaControl.getHeight();
+    _foreground.load("./maps/Water.tmx");
+    _foreground.setFollowCameraX(true);
+    _foreground.setY(_waterLevel);
 
     return true;
   }
@@ -252,6 +250,8 @@ class Game {
       if (!entity) continue;
       entity.loop();
     }
+    _waterLevel--;
+    _foreground.setY(_waterLevel);
   }
 
   public void onRender() {
@@ -269,6 +269,8 @@ class Game {
       if (!entity) continue;
       entity.render(_surfDisplay);
     }
+
+    _foreground.render(_surfDisplay);
 
     // Swap the screen with our surface (prevents flickering while drawing)
     SDL_Flip(_surfDisplay);

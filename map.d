@@ -181,9 +181,17 @@ EOF";
     SDL_Quit();
   }
 
-  void onRender(SDL_Surface* surfDisplay, int mapX, int mapY) {
-    if (_tileSet.surface == null) return;
-
+  /**
+   * Params:
+   *   surfDisplay = The surface to draw the map upon.
+   *   mapX = The horizontal offset to begin drawing the map.
+   *   mapY = The vertical offset to begin drawing the map.
+   */
+  void onRender(SDL_Surface* surfDisplay, int mapX, int mapY)
+    in {
+      assert(_tileSet.surface != null);
+    }
+  body {
     int tilesetWidth = _tileSet.surface.w / TILE_SIZE;
     int tilesetHeight = _tileSet.surface.h / TILE_SIZE;
 
