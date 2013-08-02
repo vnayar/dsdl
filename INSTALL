@@ -57,8 +57,9 @@ $ cd ..
 3.1.3. Install headers and library files.
 $ mkdir -p ~/d/include/
 $ cp -r import/* ~/d/include
+$ mkdir -p ~/d/lib
 $ cp -r lib/* ~/d/lib
 
 4.1. Build the project
 $ cd dsdl.git
-$ dmake
+$ ./dmake

@@ -78,7 +78,7 @@ class Map {
         // Initialize our tiles (not all will have properties).
         int numTiles = imageHeight / tileHeight * imageWidth / tileWidth;
         _tileSet.tiles.length = numTiles;
-        foreach (id, ref tile; _tileSet.tiles) {
+        foreach (int id, ref tile; _tileSet.tiles) {
           tile = new Tile();
           tile.id = id;
         }

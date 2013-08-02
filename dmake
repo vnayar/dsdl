@@ -6,7 +6,7 @@ set -x
 
 DC=rdmd
 DM_DFLAGS="-I${HOME}/d/include"
-DM_LDFLAGS="-L-L${HOME}/d/lib -L-lSDL_image -L-lDerelictSDL -L-lDerelictUtil -L-lDerelictGL -L-lGL -L-ldl"
+DM_LDFLAGS="-L-L/usr/lib/x86_64-linux-gnu -L-L${HOME}/d/lib -L-lDerelictSDLImage -L-lSDL_image -L-lDerelictSDL -L-lDerelictGLU -L-lDerelictGL -L-lDerelictUtil -L-lGL -L-ldl"
 BUILD_DIR="build"
 
 if ! test -e $BUILD_DIR ; then
