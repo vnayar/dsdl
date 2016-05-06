@@ -1,25 +1,30 @@
 module game;
 
+import std.file : read;
 import std.xml;
 import std.conv;
+import std.string : fromStringz;
 
-import derelict.sdl.sdl;
-import derelict.sdl.image;
-import derelict.opengl.gl;
-import derelict.opengl.glu;
-import derelict.util.compat;
+import derelict.sdl2.sdl;
+import derelict.sdl2.image;
+import derelict.opengl3.gl;
+//import derelict.opengl3.glu;
 
 import constants, surface, event, entityconfig, entity, player, projectile;
 import area, camera, background, foreground, level;
 import physics.types, physics.collision, physics.gravity;
 import resource.image;
 
-debug import std.stdio;
+debug import std.stdio : writeln, writefln;
+
+alias Scancode = int;
 
 class Game {
   private bool _running;
 
-  private SDL_Surface* _surfDisplay;
+  private SDL_Window* _sdlWindow;
+  private SDL_Renderer* _sdlRenderer;
+  private SDL_Texture* _sdlTexture;
 
   private Player[string] _players;
 
@@ -34,8 +39,8 @@ class Game {
 
   // Our inner-class defines how we handle events.
   private class GameEventDispatcher : EventDispatcher {
-    private void delegate()[int] _scanCodeDownHandlers;
-    private void delegate()[int] _scanCodeUpHandlers;
+    private void delegate()[Scancode] _scanCodeDownHandlers;
+    private void delegate()[Scancode] _scanCodeUpHandlers;
 
     public void onLoad(string fileName)
       in {
@@ -43,7 +48,7 @@ class Game {
         assert(_players.length > 0, "Call loadPlayersFromXML() before loading controls.");
       }
     body {
-      string xmlData = cast(string) std.file.read(fileName);
+      string xmlData = cast(string) read(fileName);
       auto xml = new DocumentParser(xmlData);
       xml.onStartTag["control"] = (ElementParser parser) {
         string id = parser.tag.attr["id"];
@@ -86,20 +91,21 @@ class Game {
       };
       xml.parse();
     }
-    
+
     public:
       override void onExit() {
         this.outer._running = false;
       }
 
-      override void onKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode) {
-        if (sym in _scanCodeDownHandlers)
-          _scanCodeDownHandlers[sym]();
+      override void onKeyDown(SDL_Scancode scancode, SDL_Keycode sym, Uint16 mod, Uint32 unicode) {
+        debug writefln("onKeyDown scancode=%d, sym=%d", scancode, sym);
+        if (scancode in _scanCodeDownHandlers)
+          _scanCodeDownHandlers[scancode]();
       }
 
-      override void onKeyUp(SDLKey sym, SDLMod mod, Uint16 unicode) {
-        if (sym in _scanCodeUpHandlers)
-          _scanCodeUpHandlers[sym]();
+      override void onKeyUp(SDL_Scancode scancode, SDL_Keycode sym, Uint16 mod, Uint32 unicode) {
+        if (scancode in _scanCodeUpHandlers)
+          _scanCodeUpHandlers[scancode]();
       }
 
   }
@@ -119,9 +125,9 @@ class Game {
     _foreground = new Foreground();
   }
 
-  public int onExecute() {
+  public int execute() {
     //writeln("onExecute()");
-    if (onInit() == false) {
+    if (init() == false) {
       return -1;
     }
 
@@ -131,16 +137,16 @@ class Game {
       while (SDL_PollEvent(&event)) {
         this.onEvent(event);
       }
-      onLoop();
-      onRender();
+      loop();
+      render();
     }
 
-    onCleanup();
+    cleanup();
 
     return 0;
   }
 
-  public bool onInit() {
+  public bool init() {
     //writeln("onInit()");
     initSDL();
 
@@ -174,7 +180,7 @@ class Game {
     Camera.CameraControl.setBounds(cameraBounds);
     // Let the background parallax with the camera.
     _level.background.setParallaxBounds(cameraBounds);
-    
+
     // Set the camera to track our Yoshi.
     Camera.CameraControl.setTarget(_players["player1"]);
 
@@ -187,34 +193,53 @@ class Game {
   }
 
   private void initSDL() {
-    DerelictSDL.load();
-    DerelictSDLImage.load();
-    DerelictGL.load();
-    DerelictGLU.load();
+    DerelictSDL2.load();
+    DerelictSDL2Image.load();
+    DerelictGL3.load();
+    //DerelictGLU.load();
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
-      throw new Exception("Couldn't init SDL: " ~ toDString(SDL_GetError()));
+      throw new Exception("Couldn't init SDL: " ~ SDL_GetError().fromStringz().idup);
     }
 
     SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    if ((_surfDisplay =
-          SDL_SetVideoMode(WWIDTH, WHEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF)) == null)
-    {
-      throw new Exception("Failed to set video mode: " ~ toDString(SDL_GetError()));
+    _sdlWindow = SDL_CreateWindow("DSDL Game",
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+        WWIDTH,
+        WHEIGHT,
+        /* SDL_WINDOW_FULLSCREEN | */ SDL_WINDOW_INPUT_FOCUS);
+    if (_sdlWindow == null) {
+      throw new Exception("Failed to create window: " ~ SDL_GetError().fromStringz().idup);
     }
+
+    _sdlRenderer = SDL_CreateRenderer(_sdlWindow, -1, 0);
+    if (_sdlRenderer == null) {
+      throw new Exception("Failed to get create renderer: " ~ SDL_GetError().fromStringz().idup);
+    }
+
+    //_sdlTexture = SDL_GetWindowSurface(_sdlWindow);
+    //_sdlTexture = SDL_CreateTexture(_sdlRenderer,
+    //    SDL_PIXELFORMAT_ARGB8888,
+    //    SDL_TEXTUREACCESS_STATIC,
+    //    WWIDTH, WHEIGHT);
+    //if (_sdlTexture == null) {
+    //     //SDL_SetVideoMode(WWIDTH, WHEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF)) == null) {
+    //  throw new Exception("Failed to get window surface: " ~ SDL_GetError().fromStringz().idup);
+    //}
   }
 
   private void initImageBank() {
-	ImageBank.load("./gfx", [".png", ".jpg"]);
-	ImageBank.load("./tileset", [".png"]);
+	ImageBank.load(_sdlRenderer, "./gfx", [".png", ".jpg"]);
+	ImageBank.load(_sdlRenderer, "./tileset", [".png"]);
   }
 
   private void loadPlayersFromXmlFile(string fileName) {
-    string xmlData = cast(string) std.file.read(fileName);
+    string xmlData = cast(string) read(fileName);
     auto xml = new DocumentParser(xmlData);
     EntityConfig[string] entityConfigs;
 
@@ -243,7 +268,7 @@ class Game {
 
   }
 
-  public void onLoop() {
+  public void loop() {
     _gravityField.onLoop();
     _collisionField.onLoop();
     foreach (entity; Entity.EntityList) {
@@ -254,33 +279,34 @@ class Game {
     _foreground.setY(_waterLevel);
   }
 
-  public void onRender() {
+  public void render() {
     //writeln("onRender");
     // Draw the background below everything else.
-    _level.background.onRender(_surfDisplay);
+    _level.background.render(_sdlRenderer);
 
     // Draw our tiled area.
-    Area.AreaControl.render(_surfDisplay,
+    Area.AreaControl.render(_sdlRenderer,
         Camera.CameraControl.getX(),
         Camera.CameraControl.getY());
 
     // Draw players and enemies.
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
-      entity.render(_surfDisplay);
+      entity.render(_sdlRenderer);
     }
 
-    _foreground.render(_surfDisplay);
+    _foreground.render(_sdlRenderer);
 
     // Swap the screen with our surface (prevents flickering while drawing)
-    SDL_Flip(_surfDisplay);
+    SDL_RenderPresent(_sdlRenderer);
 
     // FIXME: This is here to spare my poor CPU.
     SDL_Delay(50);
   }
 
-  public void onCleanup() {
-    SDL_FreeSurface(_surfDisplay);
+  public void cleanup() {
+    SDL_DestroyWindow(_sdlWindow);
+    SDL_DestroyRenderer(_sdlRenderer);
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
       entity.cleanup();

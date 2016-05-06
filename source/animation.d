@@ -3,7 +3,7 @@ module animation;
 import std.xml;
 import std.conv;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 debug import std.stdio;
 

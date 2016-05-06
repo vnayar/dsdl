@@ -1,0 +1,10 @@
+{
+    "name": "dsdl",
+    "description": "An SDL based game written in D.",
+    "authors": ["Vijay Nayar"],
+    "homepage": "https://github.com/vnayar/dsdl",
+    "dependencies": {
+        "derelict-sdl2": "*",
+        "derelict-gl3": "*",
+    }
+}

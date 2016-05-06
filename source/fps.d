@@ -1,6 +1,6 @@
 module fps;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 class Fps {
   static Fps FpsControl;

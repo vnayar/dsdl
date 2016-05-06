@@ -1,8 +1,8 @@
-module main;
+module dsdl;
 
 import game;
 
 void main() {
   Game theGame = new Game;
-  theGame.onExecute();
+  theGame.execute();
 }

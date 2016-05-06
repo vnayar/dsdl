@@ -4,7 +4,7 @@ import std.stdio;
 import std.xml;
 import std.conv;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import surface, sprite, area, camera, fps;
 import sprite, entityconfig;
@@ -54,7 +54,7 @@ class Entity : /*implements*/ Collidable {
   Sprite getSprite() {
     return _sprite;
   }
-  
+
   bool isRenderable() {
     return _isRenderable;
   }
@@ -80,7 +80,7 @@ class Entity : /*implements*/ Collidable {
   DVect getLocation() {
     return _location;
   }
-  
+
   void setLocation(DVect location) {
     _location = location;
   }
@@ -141,11 +141,11 @@ class Entity : /*implements*/ Collidable {
     animate();
   }
 
-  void render(SDL_Surface* surfDisplay) {
+  void render(SDL_Renderer* renderer) {
     if (isRenderable()) {
-      _sprite.render(surfDisplay, 
-                     cast(int)_location[0] - Camera.CameraControl.getX(),
-                     cast(int)_location[1] - Camera.CameraControl.getY());
+      _sprite.render(renderer,
+          cast(int)_location[0] - Camera.CameraControl.getX(),
+          cast(int)_location[1] - Camera.CameraControl.getY());
     }
   }
 
@@ -180,9 +180,9 @@ class Entity : /*implements*/ Collidable {
     return (ElementParser parser) {
       debug writeln("Entity parser");
       Entity entity = new Entity();
-      
+
       entity._entityConfig = parser.tag.attr["config"];
-      
+
       parser.onStartTag["location"] = getDVectParser(entity._location);
 
       parser.parse();
@@ -216,5 +216,5 @@ EOF";
   Entity entity = entities[0];
 
   assert(entity.getLocation() == [20.0f, 20.0f],
-         "location " ~ to!string(entity.getLocation()));
+         "location " ~ to!string(entity.getLocation()[]));
 }

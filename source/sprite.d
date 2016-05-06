@@ -3,7 +3,7 @@ module sprite;
 import std.xml;
 import std.conv;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import surface, animation;
 import resource.image;
@@ -23,7 +23,7 @@ class Sprite {
   int frameHeight;
   Animation[string] animations;
 
-  private SDL_Surface* _surface;
+  private SDL_Texture* _texture;
   private Animation _animation;
   private int _width;
   private int _height;
@@ -38,7 +38,7 @@ class Sprite {
     foreach (id, animation; animations)
       sprite.animations[id] = animation.dup;
 
-    sprite._surface = _surface;
+    sprite._texture = _texture;
     sprite._animation = _animation;
     sprite._width = _width;
     sprite._height = _height;
@@ -52,10 +52,12 @@ class Sprite {
       assert(frameHeight > 0);
     }
   body {
-    _surface = ImageBank.IMAGES[image];
-    Surface.setTransparent(_surface, 255, 0, 255);
-    _width = _surface.w / frameWidth;
-    _height = _surface.h / frameHeight;
+    _texture = ImageBank.IMAGES[image];
+    //Surface.setTransparent(_surface, 255, 0, 255);
+    int w, h;
+    SDL_QueryTexture(_texture, null, null, &w, &h);
+    _width = w / frameWidth;
+    _height = h / frameHeight;
 
     debug writeln("Sprite _width = ", _width, " _height = ", _height);
   }
@@ -83,10 +85,10 @@ class Sprite {
     return _animation.isComplete();
   }
 
-  void render(SDL_Surface* surfDisplay, int x, int y)
+  void render(SDL_Renderer* renderer, int x, int y)
     in {
       assert(_animation !is null, "Call setAnimation(string) first!");
-      assert(_surface !is null, "Call load() before rendering!");
+      assert(_texture !is null, "Call load() before rendering!");
       assert(_width > 0);
       assert(_height > 0);
     }
@@ -94,10 +96,8 @@ class Sprite {
     int frame = _animation.getFrameCurrent();
     int frameX = frame % _width;
     int frameY = frame / _width;
-    Surface.onDraw(_surface,
-                   frameX * frameWidth, frameY * frameHeight,
-                   frameWidth, frameHeight,
-                   surfDisplay, x, y);
+    Surface.renderTexture(renderer, x, y,
+        _texture, frameX * frameWidth, frameY * frameHeight, frameWidth, frameHeight);
   }
 
   static void delegate(ElementParser) getXmlParser(out Sprite sprite) {

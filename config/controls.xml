@@ -2,14 +2,14 @@
 <controls>
   <control id="player1">
     <!-- SDLK_ESCAPE -->
-    <quit>27</quit>
+    <quit>41</quit>
     <!-- SDLK_UP -->
-    <jump>273</jump>
+    <jump>82</jump>
     <!-- SDLK_LEFT -->
-    <moveLeft>276</moveLeft>
+    <moveLeft>80</moveLeft>
     <!-- SDLK_RIGHT -->
-    <moveRight>275</moveRight>
+    <moveRight>79</moveRight>
     <!-- SDLK_SPACE -->
-    <shootProjectile>32</shootProjectile>
+    <shootProjectile>44</shootProjectile>
   </control>
 </controls>

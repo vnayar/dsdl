@@ -5,16 +5,16 @@ import std.file;
 import std.exception;
 import std.algorithm;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
-import surface;
+import surface : Surface;
 
 /**
  * A central loader for image files.
  * This exists to prevent duplicate image loads.
  */
 class ImageBank {
-  public static SDL_Surface*[string] IMAGES;
+  public static SDL_Texture*[string] IMAGES;
 
   public static ~this() {
 	unload();
@@ -22,10 +22,10 @@ class ImageBank {
 
   public static void unload() {
 	foreach (image; IMAGES) {
-	  SDL_FreeSurface(image);
+	  SDL_DestroyTexture(image);
 	}
 	// Remove all image references.
-	IMAGES = (SDL_Surface*[string]).init;
+	IMAGES = (SDL_Texture*[string]).init;
   }
 
   /**
@@ -34,7 +34,7 @@ class ImageBank {
    *   dir      = The base search path.
    *   patterns = File name patterns to match.
    */
-  public static void load(in string dir, in string[] patterns) {
+  public static void load(SDL_Renderer* renderer, in string dir, in string[] patterns) {
 	// Start at the base search path, and go breadth first.
 	foreach (string name; dirEntries(dir, SpanMode.breadth)) {
 	  bool found = false;
@@ -47,7 +47,7 @@ class ImageBank {
 	  if (!found) continue;
 
 	  writeln("Loading image:  ", name);
-	  IMAGES[name] = Surface.onLoad(name);
+	  IMAGES[name] = Surface.loadTexture(renderer, name);
 	  enforce(IMAGES[name] != null, "Could not load image " ~ name);
 	}
   }

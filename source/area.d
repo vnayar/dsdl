@@ -1,6 +1,6 @@
 module area;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import std.stdio, std.string;
 import std.conv, std.xml;
@@ -17,7 +17,7 @@ class Area {
   static this() {
     AreaControl = new Area();
   }
-  
+
   /**
    * Load a an area from a file.
    * Format:
@@ -28,7 +28,7 @@ class Area {
    */
   bool load(string fileName) {
     _mapList.length = 0;
-    
+
     auto f = File(fileName, "r");
     scope (exit) { f.close(); }
 
@@ -54,7 +54,7 @@ class Area {
     return true;
   }
 
-  void render(SDL_Surface* surfDisplay, int cameraX, int cameraY) {
+  void render(SDL_Renderer* renderer, int cameraX, int cameraY) {
     int mapWidth = MAP_WIDTH * TILE_SIZE;
     int mapHeight = MAP_HEIGHT * TILE_SIZE;
 
@@ -68,7 +68,7 @@ class Area {
       int x = ((id % _areaSize) * mapWidth) - cameraX;
       int y = ((id / _areaSize) * mapHeight) - cameraY;
 
-      _mapList[id].onRender(surfDisplay, x, y);
+      _mapList[id].render(renderer, x, y);
     }
   }
 

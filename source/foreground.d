@@ -1,8 +1,8 @@
 module foreground;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
-import surface, camera;
+import camera;
 import map;
 
 debug import std.stdio;
@@ -22,7 +22,7 @@ class Foreground {
     _map.loadFromTmxFile(fileName);
   }
 
-  void render(SDL_Surface* surfDisplay) {
+  void render(SDL_Renderer* renderer) {
     int screenX = 0;
     if (!_followCameraX)
       screenX = _x - Camera.CameraControl.getX();
@@ -30,8 +30,8 @@ class Foreground {
     int screenY = 0;
     if (!_followCameraY)
       screenY = _y - Camera.CameraControl.getY();
-    
-    _map.onRender(surfDisplay, screenX, screenY);
+
+    _map.render(renderer, screenX, screenY);
   }
 
   void setFollowCameraX(bool followCameraX) {

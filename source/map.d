@@ -5,16 +5,15 @@ import std.conv;
 import std.xml;
 import std.file;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 debug {
   import std.datetime;
+  import std.string : fromStringz;
 }
 
 version(unittest) {
-  import derelict.sdl.sdl;
-  import derelict.sdl.image;
-  import derelict.util.compat;
+  import derelict.sdl2.image;
 }
 
 import constants, tile, surface;
@@ -124,7 +123,7 @@ class Map {
       throw new Exception("MapFile missing source attribute in image tag!");
 
     debug writeln("Loading image: ", tileSetImageName);
-    _tileSet.surface = ImageBank.IMAGES[tileSetImageName];
+    _tileSet.texture = ImageBank.IMAGES[tileSetImageName];
 
     return true;
   }
@@ -157,18 +156,29 @@ class Map {
 </map>
 EOF";
 
-    DerelictSDL.load();
-    DerelictSDLImage.load();
+    DerelictSDL2.load();
+    DerelictSDL2Image.load();
+
+    SDL_Window* sdlWindow = SDL_CreateWindow(
+        "UnitTest",
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+        0 /* Width */,
+        0 /* Height */,
+        SDL_WINDOW_HIDDEN);
+    SDL_Renderer* renderer = SDL_CreateRenderer(sdlWindow, -1, 0);
+    ImageBank.IMAGES["./tileset/1.png"] = SDL_CreateTexture(
+        renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, 64, 48);
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
-      throw new Exception("Couldn't init SDL: " ~ toDString(SDL_GetError()));
+      throw new Exception("Couldn't init SDL: " ~ SDL_GetError().fromStringz().idup);
     }
 
     Map map = new Map();
     map.loadFromTmx(testXmlData);
     TileSet tileSet = map.getTileSet();
-  
+
     assert(tileSet !is null, "Returned null value.");
     assert(tileSet.tiles.length == 12, "Incorrect 'tiles.length'.");
     assert(tileSet.tiles[0].id == 0);
@@ -187,13 +197,15 @@ EOF";
    *   mapX = The horizontal offset to begin drawing the map.
    *   mapY = The vertical offset to begin drawing the map.
    */
-  void onRender(SDL_Surface* surfDisplay, int mapX, int mapY)
+  void render(SDL_Renderer* renderer, int mapX, int mapY)
     in {
-      assert(_tileSet.surface != null);
+      assert(_tileSet.texture != null);
     }
   body {
-    int tilesetWidth = _tileSet.surface.w / TILE_SIZE;
-    int tilesetHeight = _tileSet.surface.h / TILE_SIZE;
+    int textureWidth, textureHeight;
+    SDL_QueryTexture(_tileSet.texture, null, null, &textureWidth, &textureHeight);
+    int tilesetWidth = textureWidth / TILE_SIZE;
+    int tilesetHeight = textureHeight / TILE_SIZE;
 
     int id = 0;
 
@@ -213,9 +225,8 @@ EOF";
         int tilesetX = (tile.id % tilesetWidth) * TILE_SIZE;
         int tilesetY = (tile.id / tilesetWidth) * TILE_SIZE;
 
-        Surface.onDraw(
-          _tileSet.surface, tilesetX, tilesetY, TILE_SIZE, TILE_SIZE,
-          surfDisplay, tX, tY);
+        Surface.renderTexture(renderer, tX, tY,
+            _tileSet.texture, tilesetX, tilesetY, TILE_SIZE, TILE_SIZE);
 
         id++;
       }
