@@ -2,10 +2,15 @@ module area;
 
 import derelict.sdl2.sdl;
 
-import std.stdio, std.string;
+import std.stdio : File;
+import std.string;
 import std.conv, std.xml;
 
-import constants, map, tile, surface;
+import constants, map, tile;
+import graphics.display, graphics.imageloader;
+
+debug import std.stdio : writeln, writefln;
+debug import std.format : format;
 
 
 class Area {
@@ -26,7 +31,7 @@ class Area {
    * ...
    * file[size][1] file[size][2] ... file[size][size]
    */
-  bool load(string fileName) {
+  bool load(in string fileName, ImageLoader imageLoader) {
     _mapList.length = 0;
 
     auto f = File(fileName, "r");
@@ -44,7 +49,7 @@ class Area {
       foreach (mapFileName; fileNames) {
 
         Map tempMap = new Map();
-        if (tempMap.loadFromTmxFile(mapFileName) == false)
+        if (tempMap.loadFromTmxFile(mapFileName, imageLoader) == false)
           return false;
 
         _mapList ~= tempMap;
@@ -54,21 +59,18 @@ class Area {
     return true;
   }
 
-  void render(SDL_Renderer* renderer, int cameraX, int cameraY) {
-    int mapWidth = MAP_WIDTH * TILE_SIZE;
-    int mapHeight = MAP_HEIGHT * TILE_SIZE;
-
-    int firstId = cameraX / mapWidth + ((cameraY / mapHeight) * _areaSize);
+  void render(Display display, int cameraX, int cameraY) {
+    int centerMapId = cameraX / getMapWidth() + ((cameraY / getMapHeight()) * _areaSize);
 
     foreach (i; 0 .. 4) {
-      int id = firstId + ((i / 2) * _areaSize) + (i % 2);
+      int id = centerMapId + ((i / 2) * _areaSize) + (i % 2);
 
       if (id < 0 || id >= _mapList.length) continue;
 
-      int x = ((id % _areaSize) * mapWidth) - cameraX;
-      int y = ((id / _areaSize) * mapHeight) - cameraY;
+      int x = ((id % _areaSize) * getMapWidth()) - cameraX;
+      int y = ((id / _areaSize) * getMapHeight()) - cameraY;
 
-      _mapList[id].render(renderer, x, y);
+      _mapList[id].render(display, x, y);
     }
   }
 
@@ -80,9 +82,7 @@ class Area {
    * Calculate the specific map, in the area, the given coordinates are in.
    */
   Map getMap(int x, int y) {
-    int mapWidth = MAP_WIDTH * TILE_SIZE;
-    int mapHeight = MAP_HEIGHT * TILE_SIZE;
-    int id = x / mapWidth + y / mapHeight * _areaSize;
+    int id = x / getMapWidth() + y / getMapHeight() * _areaSize;
 
     if (id < 0 || id >= _mapList.length) {
       return null;
@@ -95,26 +95,31 @@ class Area {
    * Gets the tile located at coordinates relative to the area.
    */
   Tile getTile(int x, int y) {
-    int mapWidth = MAP_WIDTH * TILE_SIZE;
-    int mapHeight = MAP_HEIGHT * TILE_SIZE;
-
     Map map = getMap(x, y);
 
     if (map is null)
       return null;
 
-    x = x % mapWidth;
-    y = y % mapWidth;
+    x = x % getMapWidth();
+    y = y % getMapWidth();
 
     return map.getTile(x, y);
   }
 
   int getWidth() {
-    return MAP_WIDTH * TILE_SIZE * _areaSize;
+    return getMapWidth() * _areaSize;
   }
 
   int getHeight() {
-    return MAP_HEIGHT * TILE_SIZE * _areaSize;
+    return getMapHeight() * _areaSize;
+  }
+
+  private int getMapWidth() {
+    return _mapList[0].mapWidth * _mapList[0].tileWidth;
+  }
+
+  private int getMapHeight() {
+    return _mapList[0].mapHeight * _mapList[0].tileHeight;
   }
 
   /**
@@ -122,20 +127,16 @@ class Area {
    * An element parser must take a single argument, thus one
    * should curry the first argument before adding to the parser.
    */
-  static void delegate(ElementParser) getXmlParser(Area area) {
-	// Re-initialize our area object.
-	area._mapList.length = 0;
-	area._areaSize = 0;
-
+  static void delegate(ElementParser) getXmlParser(ImageLoader imageLoader, out Area area) {
 	return (ElementParser parser) {
 	  // Save the size, which is an attribute.
+      area = new Area();
 	  area._areaSize = to!int(parser.tag.attr["size"]);
 	  parser.onEndTag["map"] = (in Element e) {
 		// Each map element contains a file name to load.
 		Map tempMap = new Map();
-		if (tempMap.loadFromTmxFile(e.text()) == false)
+		if (tempMap.loadFromTmxFile(e.text(), imageLoader) == false)
 		  throw new Exception("Unable to parse map-file " ~ e.text());
-
 		area._mapList ~= tempMap;
 	  };
 	  // Parse over the entire element, reading all maps.

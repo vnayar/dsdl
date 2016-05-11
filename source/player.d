@@ -74,7 +74,7 @@ class Player : /*extends*/ Entity {
     }
 
     projectile.shoot();
-      
+
     _projectileIndex++;
     if (_projectileIndex >= _projectiles.length)
       _projectileIndex = 0;
@@ -109,7 +109,7 @@ class Player : /*extends*/ Entity {
 
     if (!_moveLeft && !_moveRight)
       stopMove();
-    
+
     super.loop();
   }
 
@@ -119,7 +119,7 @@ class Player : /*extends*/ Entity {
       debug writeln("Player parser");
       Player player = new Player();
       string id = parser.tag.attr["id"];
-      
+
       player.setEntityConfig(parser.tag.attr["config"]);
 
       DVect location;

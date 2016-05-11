@@ -1,23 +1,19 @@
 module map;
 
-import std.stdio;
-import std.conv;
-import std.xml;
-import std.file;
+import std.conv : to;
+import std.xml : DocumentParser, ElementParser, Element;
+import std.file : read;
+import std.algorithm : min, max;
 
-import derelict.sdl2.sdl;
+import graphics;
 
 debug {
-  import std.datetime;
+  import std.datetime : StopWatch, AutoStart;
   import std.string : fromStringz;
+  import std.stdio : writeln, writefln;
 }
 
-version(unittest) {
-  import derelict.sdl2.image;
-}
-
-import constants, tile, surface;
-import resource.image;
+import tile;
 
 /**
  * A tile-based drawable grid with helper functions.
@@ -25,6 +21,10 @@ import resource.image;
 class Map {
   private TileSet _tileSet;
   int[] _tileList;
+  int mapWidth;
+  int mapHeight;
+  int tileWidth;
+  int tileHeight;
 
   TileSet getTileSet() {
     return _tileSet;
@@ -40,23 +40,21 @@ class Map {
    *
    * See http://www.mapeditor.org
    */
-  bool loadFromTmxFile(string fileName) {
+  bool loadFromTmxFile(string fileName, ImageLoader imageLoader) {
     debug StopWatch sw = StopWatch(AutoStart.yes);
-    string xmlData = cast(string)std.file.read(fileName);
+    string xmlData = cast(string)read(fileName);
     debug writeln("Read ", fileName, " in ", sw.peek().msecs, "ms.");
 
-    return loadFromTmx(xmlData);
+    return loadFromTmx(imageLoader, xmlData);
   }
 
-  bool loadFromTmx(string xmlData) {
+  bool loadFromTmx(ImageLoader imageLoader, string xmlData) {
     _tileSet = new TileSet();
     _tileList.length = 0;
 
     string tileSetImageName;
     int imageWidth;
     int imageHeight;
-    int tileWidth;
-    int tileHeight;
 
     debug StopWatch sw = StopWatch(AutoStart.yes);
     // Check for XML syntax compliance.
@@ -64,7 +62,6 @@ class Map {
     //debug writeln("Verified XML in ", sw.peek.msecs, "ms.");
 
     auto xml = new DocumentParser(xmlData);
-
     xml.onStartTag["tileset"] = (ElementParser xml) {
       tileWidth = to!int(xml.tag.attr["tilewidth"]);
       tileHeight = to!int(xml.tag.attr["tileheight"]);
@@ -101,9 +98,9 @@ class Map {
     // Parse the layer, which specifies which tiles cover the map.
     xml.onStartTag["layer"] = (ElementParser xml) {
       // First set aside enough room for our tiles.
-      int width = to!int(xml.tag.attr["width"]);
-      int height = to!int(xml.tag.attr["height"]);
-      _tileList.length = width * height;
+      mapWidth = to!int(xml.tag.attr["width"]);
+      mapHeight = to!int(xml.tag.attr["height"]);
+      _tileList.length = mapWidth * mapHeight;
 
       int id = 0;
 
@@ -123,15 +120,75 @@ class Map {
       throw new Exception("MapFile missing source attribute in image tag!");
 
     debug writeln("Loading image: ", tileSetImageName);
-    _tileSet.texture = ImageBank.IMAGES[tileSetImageName];
+    _tileSet.image = imageLoader.load(tileSetImageName);
 
     return true;
   }
 
-  unittest {
-    string testXmlData = q"EOF
+  /**
+   * Params:
+   *   surfDisplay = The surface to draw the map upon.
+   *   mapX = The horizontal offset to begin drawing the map.
+   *   mapY = The vertical offset to begin drawing the map.
+   */
+  void render(Display display, int mapX, int mapY)
+    in {
+      assert(_tileSet.image != Image.init);
+    }
+  body {
+    int tilesetWidth = _tileSet.image.width / tileWidth;
+    int tilesetHeight = _tileSet.image.height / tileHeight;
+
+    int id = 0;
+
+    foreach (y; 0 .. mapHeight) {
+      int tY = mapY + (y * tileHeight);
+      foreach (x; 0 .. mapWidth) {
+        int tX = mapX + (x * tileWidth);
+        // Get the tile to draw from the TileSet using its id from the tileList.
+        Tile tile = _tileSet.tiles[_tileList[id]];
+
+        if (tile.type == Tile.Type.NONE || tX + tileWidth <= 0 || tX >= display.width ||
+            tY + tileHeight <= 0 || tY >= display.height) {
+          id++;
+          continue;
+        }
+
+        int srcX = (tile.id % tilesetWidth) * tileWidth + max(0, -tX);
+        int srcY = (tile.id / tilesetWidth) * tileHeight + max(0, -tY);
+        int srcWidth = tileWidth - max(0, -tX);
+        int srcHeight = tileHeight - max(0, -tY);
+
+        display.renderImage(max(tX, 0), max(tY, 0),
+            _tileSet.image, srcX, srcY,
+            min(srcWidth, display.width - tX), min(srcHeight, display.height - tY));
+
+        id++;
+      }
+    }
+  }
+
+  /**
+   * Gets the tile from coordinates relative to the map.
+   */
+  Tile getTile(int x, int y) {
+    int id = x / tileWidth + y / tileHeight * mapWidth;
+
+    if (id < 0 || id >= _tileList.length)
+      return null;
+
+    if (_tileList[id] < 0 || _tileList[id] >= _tileSet.tiles.length) {
+      debug writeln("Tile ", _tileList[id], " is out of range ", _tileSet.tiles.length);
+    }
+    return _tileSet.tiles[_tileList[id]];
+  }
+}
+
+unittest {
+  writeln("-- START UnitTest for Map --");
+  string testXmlData = q"EOF
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" width="40" height="40" tilewidth="16" tileheight="16">
+<map version="1.0" orientation="orthogonal" width="3" height="4" tilewidth="16" tileheight="16">
  <tileset firstgid="1" name="DemoTileSet" tilewidth="16" tileheight="16">
   <image source="./tileset/1.png" width="64" height="48"/>
   <tile id="0">
@@ -144,9 +201,22 @@ class Map {
     <property name="type" value="1"/>
    </properties>
   </tile>
+  <tile id="2">
+   <properties>
+    <property name="type" value="2"/>
+   </properties>
+  </tile>
  </tileset>
- <layer name="Tile Layer 1" width="2" height="2">
+ <layer name="Tile Layer 1" width="3" height="4">
    <data>
+     <tile gid="2"/>
+     <tile gid="1"/>
+     <tile gid="2"/>
+     <tile gid="1"/>
+     <tile gid="2"/>
+     <tile gid="1"/>
+     <tile gid="2"/>
+     <tile gid="3"/>
      <tile gid="2"/>
      <tile gid="1"/>
      <tile gid="2"/>
@@ -156,95 +226,29 @@ class Map {
 </map>
 EOF";
 
-    DerelictSDL2.load();
-    DerelictSDL2Image.load();
+  ImageLoader imageLoader = new ImageLoader(null /* renderer */);
+  imageLoader.cache(
+      "./tileset/1.png", Image(null /* texture */, 64 /* width */, 48 /* height */));
 
-    SDL_Window* sdlWindow = SDL_CreateWindow(
-        "UnitTest",
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
-        0 /* Width */,
-        0 /* Height */,
-        SDL_WINDOW_HIDDEN);
-    SDL_Renderer* renderer = SDL_CreateRenderer(sdlWindow, -1, 0);
-    ImageBank.IMAGES["./tileset/1.png"] = SDL_CreateTexture(
-        renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, 64, 48);
+  Map map = new Map();
+  map.loadFromTmx(imageLoader, testXmlData);
+  TileSet tileSet = map.getTileSet();
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    {
-      throw new Exception("Couldn't init SDL: " ~ SDL_GetError().fromStringz().idup);
-    }
+  assert(tileSet !is null, "Returned null value.");
+  assert(tileSet.tiles.length == 12, "Incorrect 'tiles.length'.");
+  assert(tileSet.tiles[0].id == 0);
+  assert(tileSet.tiles[1].type == Tile.Type.NORMAL, "Incorrect type " ~ to!string(tileSet.tiles[1].type));
+  assert(tileSet.tiles[2].type == Tile.Type.BLOCK, "Incorrect type " ~ to!string(tileSet.tiles[2].type));
+  assert(tileSet.tiles[3].type == Tile.Type.NONE, "Bad default type " ~ to!string(tileSet.tiles[3].type));
 
-    Map map = new Map();
-    map.loadFromTmx(testXmlData);
-    TileSet tileSet = map.getTileSet();
+  assert(map._tileList.length == 12);
+  assert(map._tileList[0] == 1, "tileList[0] == 1, found " ~ to!string(map._tileList[0]));
 
-    assert(tileSet !is null, "Returned null value.");
-    assert(tileSet.tiles.length == 12, "Incorrect 'tiles.length'.");
-    assert(tileSet.tiles[0].id == 0);
-    assert(tileSet.tiles[1].type == Tile.Type.NORMAL, "Incorrect type " ~ to!string(tileSet.tiles[1].type));
-    assert(tileSet.tiles[2].type == Tile.Type.NONE, "Bad default type " ~ to!string(tileSet.tiles[2].type));
-
-    assert(map._tileList[0] == 1, "tileList[0] == 1, found " ~ to!string(map._tileList[0]));
-    assert(map._tileList.length == 4, "_tileList.length == 4, found " ~ to!string(map._tileList.length));
-
-    SDL_Quit();
-  }
-
-  /**
-   * Params:
-   *   surfDisplay = The surface to draw the map upon.
-   *   mapX = The horizontal offset to begin drawing the map.
-   *   mapY = The vertical offset to begin drawing the map.
-   */
-  void render(SDL_Renderer* renderer, int mapX, int mapY)
-    in {
-      assert(_tileSet.texture != null);
-    }
-  body {
-    int textureWidth, textureHeight;
-    SDL_QueryTexture(_tileSet.texture, null, null, &textureWidth, &textureHeight);
-    int tilesetWidth = textureWidth / TILE_SIZE;
-    int tilesetHeight = textureHeight / TILE_SIZE;
-
-    int id = 0;
-
-    foreach (y; 0 .. MAP_HEIGHT) {
-      foreach (x; 0 .. MAP_WIDTH) {
-        // Get the tile to draw from the TileSet using its id from the tileList.
-        Tile tile = _tileSet.tiles[_tileList[id]];
-
-        if (tile.type == Tile.Type.NONE) {
-          id++;
-          continue;
-        }
-
-        int tX = mapX + (x * TILE_SIZE);
-        int tY = mapY + (y * TILE_SIZE);
-
-        int tilesetX = (tile.id % tilesetWidth) * TILE_SIZE;
-        int tilesetY = (tile.id / tilesetWidth) * TILE_SIZE;
-
-        Surface.renderTexture(renderer, tX, tY,
-            _tileSet.texture, tilesetX, tilesetY, TILE_SIZE, TILE_SIZE);
-
-        id++;
-      }
-    }
-  }
-
-  /**
-   * Gets the tile from coordinates relative to the map.
-   */
-  Tile getTile(int x, int y) {
-    int id = x / TILE_SIZE + y / TILE_SIZE * MAP_WIDTH;
-
-    if (id < 0 || id >= _tileList.length)
-      return null;
-
-    if (_tileList[id] < 0 || _tileList[id] >= _tileSet.tiles.length) {
-      writeln("Tile ", _tileList[id], " is out of range ", _tileSet.tiles.length);
-    }
-    return _tileSet.tiles[_tileList[id]];
-  }
+  assert(map.getTile(18, 35).type == 2);
+  assert(map.getTile(15, 35).type == 1);
+  assert(map.getTile(35, 35).type == 1);
+  assert(map.getTile(35, 31).type == 1);
+  assert(map.getTile(35, 49).type == 1);
+  writeln("-- END UnitTest for Map --");
 }
+

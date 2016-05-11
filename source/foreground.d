@@ -2,10 +2,12 @@ module foreground;
 
 import derelict.sdl2.sdl;
 
+import graphics;
 import camera;
 import map;
 
 debug import std.stdio;
+
 
 class Foreground {
   private Map _map;
@@ -18,11 +20,11 @@ class Foreground {
     _map = new Map();
   }
 
-  void load(in string fileName) {
-    _map.loadFromTmxFile(fileName);
+  void load(in string fileName, ImageLoader imageLoader) {
+    _map.loadFromTmxFile(fileName, imageLoader);
   }
 
-  void render(SDL_Renderer* renderer) {
+  void render(Display display) {
     int screenX = 0;
     if (!_followCameraX)
       screenX = _x - Camera.CameraControl.getX();
@@ -31,7 +33,7 @@ class Foreground {
     if (!_followCameraY)
       screenY = _y - Camera.CameraControl.getY();
 
-    _map.render(renderer, screenX, screenY);
+    _map.render(display, screenX, screenY);
   }
 
   void setFollowCameraX(bool followCameraX) {

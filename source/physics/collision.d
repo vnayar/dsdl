@@ -2,8 +2,10 @@ module physics.collision;
 
 import physics.types;
 
-import std.stdio;
-import std.conv, std.math;
+import std.math : abs, signbit;
+
+debug import std.stdio : writeln;
+
 
 // FIXME: Remove these dependencies later.
 import constants, area, tile, fps;

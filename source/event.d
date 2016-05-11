@@ -15,7 +15,7 @@ public:
 
   // Main dispatcher function checking even status to pick callback.
   void onEvent(const SDL_Event event) {
-    debug writefln("Received event: %X", event.type);
+    //debug writefln("Received event: %X", event.type);
     switch(event.type) {
     case SDL_KEYDOWN:
       SDL_Keysym keysym = event.key.keysym;

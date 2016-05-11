@@ -1,12 +1,13 @@
 module sprite;
 
-import std.xml;
+import std.algorithm : min, max;
 import std.conv;
+import std.xml;
 
 import derelict.sdl2.sdl;
 
-import surface, animation;
-import resource.image;
+import animation;
+import graphics;
 
 debug import std.stdio;
 
@@ -18,48 +19,39 @@ debug import std.stdio;
  * between over time.
  */
 class Sprite {
-  string image;
+  string imageName;
   int frameWidth;
   int frameHeight;
   Animation[string] animations;
 
-  private SDL_Texture* _texture;
+  private Image _image;
   private Animation _animation;
-  private int _width;
-  private int _height;
-  
+
   @property
   Sprite dup() {
     Sprite sprite = new Sprite();
-    sprite.image = image;
+    sprite.imageName = imageName;
     sprite.frameWidth = frameWidth;
     sprite.frameHeight = frameHeight;
-    
+
     foreach (id, animation; animations)
       sprite.animations[id] = animation.dup;
 
-    sprite._texture = _texture;
+    sprite._image = _image;
     sprite._animation = _animation;
-    sprite._width = _width;
-    sprite._height = _height;
 
     return sprite;
   }
 
-  void load()
+  void load(ImageLoader imageLoader)
     in {
       assert(frameWidth > 0);
       assert(frameHeight > 0);
     }
   body {
-    _texture = ImageBank.IMAGES[image];
-    //Surface.setTransparent(_surface, 255, 0, 255);
-    int w, h;
-    SDL_QueryTexture(_texture, null, null, &w, &h);
-    _width = w / frameWidth;
-    _height = h / frameHeight;
+    _image = imageLoader.load(imageName);
 
-    debug writeln("Sprite _width = ", _width, " _height = ", _height);
+    debug writeln("Sprite _image.width = ", _image.width, " _image.height = ", _image.height);
   }
 
   void setAnimation(string id)
@@ -85,19 +77,27 @@ class Sprite {
     return _animation.isComplete();
   }
 
-  void render(SDL_Renderer* renderer, int x, int y)
+  void render(Display display, int x, int y)
     in {
       assert(_animation !is null, "Call setAnimation(string) first!");
-      assert(_texture !is null, "Call load() before rendering!");
-      assert(_width > 0);
-      assert(_height > 0);
+      assert(_image != Image.init, "Call load() before rendering!");
     }
   body {
+    if (x + frameWidth <= 0 || x >= display.width || y + frameWidth <= 0 || y >= display.height)
+      return;
+
     int frame = _animation.getFrameCurrent();
-    int frameX = frame % _width;
-    int frameY = frame / _width;
-    Surface.renderTexture(renderer, x, y,
-        _texture, frameX * frameWidth, frameY * frameHeight, frameWidth, frameHeight);
+    int frameX = frame % (_image.width / frameWidth);
+    int frameY = frame / (_image.width / frameWidth);
+
+    int srcX = frameX * frameWidth + max(0, -x);
+    int srcY = frameY * frameHeight + max(0, -y);
+    int srcWidth = frameWidth - max(0, -x);
+    int srcHeight = frameHeight - max(0, -y);
+
+    display.renderImage(max(x, 0), max(y, 0),
+        _image, srcX, srcY,
+        min(srcWidth, display.width - x), min(srcHeight, display.height - y));
   }
 
   static void delegate(ElementParser) getXmlParser(out Sprite sprite) {
@@ -107,7 +107,7 @@ class Sprite {
       sprite = new Sprite();
 
       parser.onEndTag["image"] = (in Element e) {
-        sprite.image = e.text();
+        sprite.imageName = e.text();
       };
       parser.onEndTag["frameWidth"] = (in Element e) {
         sprite.frameWidth = to!int(e.text());
@@ -147,6 +147,6 @@ EOF";
 
   assert(sprite.frameWidth == 32);
   assert(sprite.frameHeight == 32);
-  assert(sprite.image == "./gfx/yoshi3.png");
+  assert(sprite.imageName == "./gfx/yoshi3.png");
   assert(sprite.animations.length == 2);
 }

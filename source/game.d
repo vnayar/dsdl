@@ -8,12 +8,11 @@ import std.string : fromStringz;
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
 import derelict.opengl3.gl;
-//import derelict.opengl3.glu;
 
-import constants, surface, event, entityconfig, entity, player, projectile;
+import constants, event, entityconfig, entity, player, projectile;
 import area, camera, background, foreground, level;
 import physics.types, physics.collision, physics.gravity;
-import resource.image;
+import graphics;
 
 debug import std.stdio : writeln, writefln;
 
@@ -22,9 +21,7 @@ alias Scancode = int;
 class Game {
   private bool _running;
 
-  private SDL_Window* _sdlWindow;
-  private SDL_Renderer* _sdlRenderer;
-  private SDL_Texture* _sdlTexture;
+  private Display display;
 
   private Player[string] _players;
 
@@ -57,33 +54,33 @@ class Game {
         Player player = _players[id];
 
         parser.onEndTag["quit"] = (in Element e) {
-          _scanCodeDownHandlers[to!int(e.text())] = delegate() {
+          _scanCodeDownHandlers[to!Scancode(e.text())] = delegate() {
             _running = false;
           };
         };
         parser.onEndTag["jump"] = (in Element e) {
-          _scanCodeDownHandlers[to!int(e.text())] = delegate() {
+          _scanCodeDownHandlers[to!Scancode(e.text())] = delegate() {
             player.jump();
           };
         };
         parser.onEndTag["moveLeft"] = (in Element e) {
-          _scanCodeDownHandlers[to!int(e.text())] = delegate() {
+          _scanCodeDownHandlers[to!Scancode(e.text())] = delegate() {
             player.setMoveLeft(true);
           };
-          _scanCodeUpHandlers[to!int(e.text())] = delegate() {
+          _scanCodeUpHandlers[to!Scancode(e.text())] = delegate() {
             player.setMoveLeft(false);
           };
         };
         parser.onEndTag["moveRight"] = (in Element e) {
-          _scanCodeDownHandlers[to!int(e.text())] = delegate() {
+          _scanCodeDownHandlers[to!Scancode(e.text())] = delegate() {
             player.setMoveRight(true);
           };
-          _scanCodeUpHandlers[to!int(e.text())] = delegate() {
+          _scanCodeUpHandlers[to!Scancode(e.text())] = delegate() {
             player.setMoveRight(false);
           };
         };
         parser.onEndTag["shootProjectile"] = (in Element e) {
-          _scanCodeDownHandlers[to!int(e.text())] = delegate() {
+          _scanCodeDownHandlers[to!Scancode(e.text())] = delegate() {
             player.shootProjectile();
           };
         };
@@ -123,10 +120,11 @@ class Game {
 
 	_level = new Level();
     _foreground = new Foreground();
+
+    display = new Display(WWIDTH, WHEIGHT);
   }
 
   public int execute() {
-    //writeln("onExecute()");
     if (init() == false) {
       return -1;
     }
@@ -146,22 +144,18 @@ class Game {
     return 0;
   }
 
+  // TODO: Cleanly separate init and load phases.
+  //   init = Simple data initialization, reading from XML, etc.
+  //   load = Memory allocation laden loading, such as image files.
   public bool init() {
-    //writeln("onInit()");
-    initSDL();
+    display.init();
 
-    initImageBank();
-
-    loadPlayersFromXmlFile("./config/players.xml");
+    loadPlayersFromXmlFile("./config/players.xml", display.getImageLoader());
 
     _eventDispatcher.onLoad("./config/controls.xml");
 
-    debug writeln("Players: ", _players);
-    // Load our background image.
-    //_background.onLoad("./gfx/Natural_Dam,_Ozark_National_Forest,_Arkansas.jpg");
-
     // Now load the landscape we we play on.
-    _level.loadFromXmlFile("./levels/level1.xml");
+    _level.loadFromXmlFile("./levels/level1.xml", display.getImageLoader());
 
     // Set up our fields.
     foreach (entity; Entity.EntityList) {
@@ -173,8 +167,8 @@ class Game {
     Rectangle cameraBounds = Rectangle(
       [0, 0],
       [
-        Area.AreaControl.getWidth() - WWIDTH,
-        Area.AreaControl.getHeight() - WHEIGHT
+        Area.AreaControl.getWidth() - display.width,
+        Area.AreaControl.getHeight() - display.height
       ]
     );
     Camera.CameraControl.setBounds(cameraBounds);
@@ -185,60 +179,15 @@ class Game {
     Camera.CameraControl.setTarget(_players["player1"]);
 
     _waterLevel = Area.AreaControl.getHeight();
-    _foreground.load("./maps/Water.tmx");
+    _foreground.load("./maps/Water.tmx", display.getImageLoader());
     _foreground.setFollowCameraX(true);
     _foreground.setY(_waterLevel);
 
     return true;
   }
 
-  private void initSDL() {
-    DerelictSDL2.load();
-    DerelictSDL2Image.load();
-    DerelictGL3.load();
-    //DerelictGLU.load();
-
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    {
-      throw new Exception("Couldn't init SDL: " ~ SDL_GetError().fromStringz().idup);
-    }
-
-    SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-    _sdlWindow = SDL_CreateWindow("DSDL Game",
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
-        WWIDTH,
-        WHEIGHT,
-        /* SDL_WINDOW_FULLSCREEN | */ SDL_WINDOW_INPUT_FOCUS);
-    if (_sdlWindow == null) {
-      throw new Exception("Failed to create window: " ~ SDL_GetError().fromStringz().idup);
-    }
-
-    _sdlRenderer = SDL_CreateRenderer(_sdlWindow, -1, 0);
-    if (_sdlRenderer == null) {
-      throw new Exception("Failed to get create renderer: " ~ SDL_GetError().fromStringz().idup);
-    }
-
-    //_sdlTexture = SDL_GetWindowSurface(_sdlWindow);
-    //_sdlTexture = SDL_CreateTexture(_sdlRenderer,
-    //    SDL_PIXELFORMAT_ARGB8888,
-    //    SDL_TEXTUREACCESS_STATIC,
-    //    WWIDTH, WHEIGHT);
-    //if (_sdlTexture == null) {
-    //     //SDL_SetVideoMode(WWIDTH, WHEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF)) == null) {
-    //  throw new Exception("Failed to get window surface: " ~ SDL_GetError().fromStringz().idup);
-    //}
-  }
-
-  private void initImageBank() {
-	ImageBank.load(_sdlRenderer, "./gfx", [".png", ".jpg"]);
-	ImageBank.load(_sdlRenderer, "./tileset", [".png"]);
-  }
-
-  private void loadPlayersFromXmlFile(string fileName) {
+  // TODO: Move this code into player.d.
+  private void loadPlayersFromXmlFile(string fileName, ImageLoader imageLoader) {
     string xmlData = cast(string) read(fileName);
     auto xml = new DocumentParser(xmlData);
     EntityConfig[string] entityConfigs;
@@ -249,7 +198,7 @@ class Game {
 
     foreach (player; _players) {
       EntityConfig entityConfig = entityConfigs[player.getEntityConfig()];
-      player.load(entityConfig);
+      player.load(entityConfig, imageLoader);
       player.getSprite().setAnimation("right");
       Entity.EntityList ~= player;
 
@@ -257,7 +206,7 @@ class Game {
       Projectile[] projectiles;
       foreach (i; 0 .. 3) {
         Projectile projectile = new Projectile();
-        projectile.load(entityConfigs["balloon"]);
+        projectile.load(entityConfigs["balloon"], imageLoader);
         projectile.getSprite().setAnimation("spin");
         projectile.setIsCollidable(false);
         projectiles ~= projectile;
@@ -282,31 +231,29 @@ class Game {
   public void render() {
     //writeln("onRender");
     // Draw the background below everything else.
-    _level.background.render(_sdlRenderer);
+    _level.background.render(display);
 
     // Draw our tiled area.
-    Area.AreaControl.render(_sdlRenderer,
+    Area.AreaControl.render(display,
         Camera.CameraControl.getX(),
         Camera.CameraControl.getY());
 
     // Draw players and enemies.
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
-      entity.render(_sdlRenderer);
+      entity.render(display);
     }
 
-    _foreground.render(_sdlRenderer);
+    _foreground.render(display);
 
-    // Swap the screen with our surface (prevents flickering while drawing)
-    SDL_RenderPresent(_sdlRenderer);
+    // Update the actual display with all the changes made since the last call.
+    display.render();
 
     // FIXME: This is here to spare my poor CPU.
     SDL_Delay(50);
   }
 
   public void cleanup() {
-    SDL_DestroyWindow(_sdlWindow);
-    SDL_DestroyRenderer(_sdlRenderer);
     foreach (entity; Entity.EntityList) {
       if (!entity) continue;
       entity.cleanup();
@@ -314,9 +261,6 @@ class Game {
     Entity.EntityList = new Entity[0];
 
     Area.AreaControl.cleanup();
-
-    if(SDL_Quit !is null)
-      SDL_Quit();
   }
 
 }

@@ -1,6 +1,6 @@
 module tile;
 
-import derelict.sdl2.sdl;
+import graphics;
 
 
 class Tile {
@@ -10,6 +10,6 @@ class Tile {
 }
 
 class TileSet {
-  SDL_Texture* texture;
+  Image image;
   Tile[] tiles;
 }

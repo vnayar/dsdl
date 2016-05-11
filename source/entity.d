@@ -6,10 +6,10 @@ import std.conv;
 
 import derelict.sdl2.sdl;
 
-import surface, sprite, area, camera, fps;
+import sprite, area, camera, fps;
 import sprite, entityconfig;
 import physics.types;
-import resource.image;
+import graphics;
 
 debug {
   import std.stdio;
@@ -120,12 +120,12 @@ class Entity : /*implements*/ Collidable {
 
 
   // Allow alternate initialization from a configuration template.
-  bool load(EntityConfig entityConfig) {
+  bool load(EntityConfig entityConfig, ImageLoader imageLoader) {
     _maxVelocity = entityConfig.maxVelocity;
     _collisionBoundary = entityConfig.collisionBoundary;
 
     _sprite = entityConfig.sprite.dup;
-    _sprite.load();
+    _sprite.load(imageLoader);
 
     return true;
   }
@@ -141,9 +141,9 @@ class Entity : /*implements*/ Collidable {
     animate();
   }
 
-  void render(SDL_Renderer* renderer) {
+  void render(Display display) {
     if (isRenderable()) {
-      _sprite.render(renderer,
+      _sprite.render(display,
           cast(int)_location[0] - Camera.CameraControl.getX(),
           cast(int)_location[1] - Camera.CameraControl.getY());
     }
@@ -176,7 +176,6 @@ class Entity : /*implements*/ Collidable {
    * Parser logic to read from XML file.
    */
   static void delegate (ElementParser) getXmlParser(out Entity[] entities) {
-    debug writeln("Entering Entity.getXmlParser");
     return (ElementParser parser) {
       debug writeln("Entity parser");
       Entity entity = new Entity();
