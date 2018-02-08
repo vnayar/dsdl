@@ -7,7 +7,6 @@ import std.string : fromStringz;
 
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
-import derelict.opengl3.gl;
 
 import constants, event, entityconfig, entity, player, projectile;
 import area, camera, background, foreground, level;

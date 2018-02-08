@@ -2,6 +2,7 @@ module graphics.display;
 
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
+import derelict.sdl2.mixer;
 import std.string : toStringz, fromStringz;
 import std.format : format;
 
@@ -40,7 +41,7 @@ public class Display {
   }
 
   private void initSdl() {
-    DerelictSDL2.load();
+    DerelictSDL2.load(SharedLibVersion(2, 0, 1));
     DerelictSDL2Image.load();
 
     // TODO: Delete this section? BEGIN
@@ -61,7 +62,7 @@ public class Display {
       throw new Exception("Failed to create window: " ~ SDL_GetError().fromStringz().idup);
     }
 
-    renderer = SDL_CreateRenderer(window, -1, 0);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (renderer == null) {
       throw new Exception("Failed to get create renderer: " ~ SDL_GetError().fromStringz().idup);
     }
